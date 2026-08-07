@@ -22,3 +22,4 @@ build/
 Thumbs.db
 backups/*.sql
 backups/*.zip
+start_church.bat
