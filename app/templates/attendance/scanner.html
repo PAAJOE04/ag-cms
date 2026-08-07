@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}QR Scanner{% endblock %}
+{% block page_title %}QR Check-In Station{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">Scan Member QR</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Service / Meeting</label>
+                    <select id="attendance_type_id" class="form-select">
+                        {% for t in types %}
+                        <option value="{{ t.id }}">{{ t.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Date</label>
+                    <input type="date" id="attendance_date" class="form-control">
+                </div>
+                <div id="reader" class="mx-auto"></div>
+                <div class="text-center text-muted small mt-2">
+                    Point the camera at the member's QR code. Members can show their
+                    QR from their profile page.
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header">Result</div>
+            <div class="card-body" id="result-panel">
+                <div class="text-center text-muted py-5">Waiting for scan...</div>
+            </div>
+        </div>
+        <div class="card mt-3">
+            <div class="card-body small">
+                <strong>Tips:</strong>
+                <ul class="mb-0 ps-3">
+                    <li>Member shows their QR (from their profile page), you scan it.</li>
+                    <li>If the member is not recognized, they are not registered — use <a href="{{ url_for('members.create') }}">Register Member</a> first.</li>
+                    <li>Already-checked-in members are not double counted.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+document.querySelector('#attendance_date').value = new Date().toISOString().split('T')[0];
+const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+const resultPanel = document.getElementById('result-panel');
+
+function showResult(html, cls) {
+    resultPanel.innerHTML = `<div class="text-center py-4 ${cls}">${html}</div>`;
+}
+
+const html5QrCode = new Html5Qrcode('reader');
+html5QrCode.start(
+    { facingMode: 'environment' },
+    { fps: 10, qrbox: { width: 220, height: 220 } },
+    onScanSuccess,
+    () => {}
+).catch(err => {
+    showResult('<i class="fas fa-video-slash fa-2x mb-2 d-block"></i>Camera unavailable. ' +
+               'Check that your browser has camera permission.', 'text-danger');
+});
+
+function onScanSuccess(decodedText) {
+    html5QrCode.pause(true);
+    const typeId = document.getElementById('attendance_type_id').value;
+    const date = document.getElementById('attendance_date').value;
+    showResult('<div class="spinner-border text-primary"></div><div class="mt-2">Checking in...</div>');
+
+    fetch('{{ url_for("attendance.api_qr_checkin") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({ qr_code: decodedText, attendance_type_id: typeId, date: date })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            showResult(
+                `<span class="text-success"><i class="fas fa-check-circle fa-3x d-block mb-2"></i></span>
+                 <h4 class="text-success mb-1">${data.member_name}</h4>
+                 <div class="text-muted">Checked in to ${data.attendance_type} &mdash; ${data.date}</div>`,
+                ''
+            );
+        } else if (data.already) {
+            showResult(
+                `<span class="text-warning"><i class="fas fa-exclamation-triangle fa-3x d-block mb-2"></i></span>
+                 <h4 class="text-warning mb-1">${data.member_name}</h4>
+                 <div>Already checked in to this service today.</div>`,
+                ''
+            );
+        } else {
+            showResult(`<span class="text-danger"><i class="fas fa-times-circle fa-3x d-block mb-2"></i></span>
+                 <div>${data.error}</div>`, '');
+        }
+    })
+    .catch(() => {
+        showResult('<div class="text-danger">Something went wrong. Please scan again.</div>');
+    })
+    .finally(() => {
+        setTimeout(() => html5QrCode.resume(), 2500);
+    });
+}
+</script>
+{% endblock %}
