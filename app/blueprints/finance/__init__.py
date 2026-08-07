@@ -1,0 +1,151 @@
+"""Finance management blueprint."""
+from datetime import datetime
+
+from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required
+from sqlalchemy import func
+
+from app.extensions import db
+from app.models.finance import Transaction, TransactionCategory, Budget, Receipt
+from app.models.member import Member
+from app.utils.decorators import permission_required
+from app.utils.helpers import audit_action, format_currency, get_date_range, paginate_query
+
+finance_bp = Blueprint('finance', __name__)
+
+
+@finance_bp.route('/')
+@login_required
+@permission_required('finance:view')
+def index():
+    """Financial dashboard."""
+    today = datetime.utcnow().date()
+    month_start = today.replace(day=1)
+
+    income = float(db.session.query(func.sum(Transaction.amount)).filter(
+        Transaction.type == 'income',
+        Transaction.transaction_date >= month_start
+    ).scalar() or 0)
+
+    expenses = float(db.session.query(func.sum(Transaction.amount)).filter(
+        Transaction.type == 'expense',
+        Transaction.transaction_date >= month_start
+    ).scalar() or 0)
+
+    recent = Transaction.query.order_by(
+        Transaction.transaction_date.desc()
+    ).limit(10).all()
+
+    # Category breakdown for charts
+    income_by_cat = db.session.query(
+        TransactionCategory.name,
+        func.sum(Transaction.amount)
+    ).join(Transaction).filter(
+        Transaction.type == 'income',
+        Transaction.transaction_date >= month_start
+    ).group_by(TransactionCategory.name).all()
+
+    expense_by_cat = db.session.query(
+        TransactionCategory.name,
+        func.sum(Transaction.amount)
+    ).join(Transaction).filter(
+        Transaction.type == 'expense',
+        Transaction.transaction_date >= month_start
+    ).group_by(TransactionCategory.name).all()
+
+    return render_template(
+        'finance/index.html',
+        income=income,
+        expenses=expenses,
+        net=income - expenses,
+        recent=recent,
+        income_by_cat=income_by_cat,
+        expense_by_cat=expense_by_cat,
+    )
+
+
+@finance_bp.route('/transactions')
+@login_required
+@permission_required('finance:view')
+def transactions():
+    """List transactions."""
+    tx_type = request.args.get('type', '')
+    query = Transaction.query
+    if tx_type:
+        query = query.filter_by(type=tx_type)
+    records = paginate_query(query.order_by(Transaction.transaction_date.desc()))
+    return render_template('finance/transactions.html', records=records, tx_type=tx_type)
+
+
+@finance_bp.route('/record', methods=['GET', 'POST'])
+@login_required
+@permission_required('finance:create')
+def record():
+    """Record a financial transaction."""
+    categories = TransactionCategory.query.filter_by(is_active=True).all()
+
+    if request.method == 'POST':
+        tx = Transaction(
+            reference=Transaction.generate_reference(),
+            type=request.form['type'],
+            category_id=request.form.get('category_id', type=int),
+            amount=request.form['amount'],
+            description=request.form.get('description'),
+            member_id=request.form.get('member_id', type=int) or None,
+            payment_method=request.form.get('payment_method'),
+            transaction_date=datetime.strptime(
+                request.form['transaction_date'], '%Y-%m-%d'
+            ).date(),
+            recorded_by_id=current_user.id,
+        )
+        db.session.add(tx)
+        db.session.flush()
+
+        if tx.type == 'income' and request.form.get('generate_receipt'):
+            receipt = Receipt(
+                receipt_number=Receipt.generate_number(),
+                transaction_id=tx.id,
+                issued_to=request.form.get('issued_to', ''),
+                issued_by_id=current_user.id,
+            )
+            db.session.add(receipt)
+
+        audit_action('create', 'finance', f'Recorded {tx.type} transaction {tx.reference}')
+        db.session.commit()
+        flash(f'Transaction {tx.reference} recorded.', 'success')
+        return redirect(url_for('finance.transactions'))
+
+    members = Member.query.filter_by(membership_status='active').order_by(Member.last_name).all()
+    return render_template('finance/record.html', categories=categories, members=members)
+
+
+@finance_bp.route('/budgets')
+@login_required
+@permission_required('finance:view')
+def budgets():
+    """Budget management."""
+    year = request.args.get('year', datetime.utcnow().year, type=int)
+    budgets_list = Budget.query.filter_by(year=year).all()
+    categories = TransactionCategory.query.filter_by(type='expense', is_active=True).all()
+    return render_template('finance/budgets.html', budgets=budgets_list, year=year, categories=categories)
+
+
+@finance_bp.route('/budgets/create', methods=['POST'])
+@login_required
+@permission_required('finance:create')
+def create_budget():
+    """Create a budget entry."""
+    budget = Budget(
+        name=request.form['name'],
+        category_id=request.form.get('category_id', type=int) or None,
+        amount=request.form['amount'],
+        period=request.form.get('period', 'monthly'),
+        year=request.form.get('year', datetime.utcnow().year, type=int),
+        month=request.form.get('month', type=int),
+        notes=request.form.get('notes'),
+        created_by_id=current_user.id,
+    )
+    db.session.add(budget)
+    db.session.commit()
+    flash('Budget created.', 'success')
+    return redirect(url_for('finance.budgets'))

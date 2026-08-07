@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Finance{% endblock %}
+{% block page_title %}Financial Dashboard{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="stat-card"><div class="stat-label">Monthly Income</div><div class="stat-value text-success">${{ "{:,.2f}".format(income) }}</div></div></div>
+    <div class="col-md-4"><div class="stat-card"><div class="stat-label">Monthly Expenses</div><div class="stat-value text-danger">${{ "{:,.2f}".format(expenses) }}</div></div></div>
+    <div class="col-md-4"><div class="stat-card"><div class="stat-label">Net Balance</div><div class="stat-value">${{ "{:,.2f}".format(net) }}</div></div></div>
+</div>
+
+<div class="d-flex gap-2 mb-3">
+    {% if current_user.has_permission('finance:create') %}
+    <a href="{{ url_for('finance.record') }}" class="btn btn-primary"><i class="fas fa-plus me-1"></i> Record Transaction</a>
+    {% endif %}
+    <a href="{{ url_for('finance.transactions') }}" class="btn btn-outline-primary">All Transactions</a>
+    <a href="{{ url_for('finance.budgets') }}" class="btn btn-outline-secondary">Budgets</a>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card"><div class="card-header">Income by Category</div><div class="card-body"><canvas id="incomeChart"></canvas></div></div>
+    </div>
+    <div class="col-md-6">
+        <div class="card"><div class="card-header">Expenses by Category</div><div class="card-body"><canvas id="expenseChart"></canvas></div></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+new Chart(document.getElementById('incomeChart'), { type: 'doughnut', data: { labels: {{ income_by_cat|map('first')|list|tojson }}, datasets: [{ data: {{ income_by_cat|map('last')|list|tojson }}, backgroundColor: ['#10B981','#3B82F6','#F59E0B','#8B5CF6','#EC4899'] }] }, options: { responsive: true } });
+new Chart(document.getElementById('expenseChart'), { type: 'doughnut', data: { labels: {{ expense_by_cat|map('first')|list|tojson }}, datasets: [{ data: {{ expense_by_cat|map('last')|list|tojson }}, backgroundColor: ['#EF4444','#F97316','#84CC16','#06B6D4','#6366F1'] }] }, options: { responsive: true } });
+</script>
+{% endblock %}

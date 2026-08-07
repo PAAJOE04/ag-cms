@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{{ member.full_name }}{% endblock %}
+{% block page_title %}Member Profile{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card text-center">
+            <div class="card-body py-4">
+                <div class="member-avatar lg mx-auto mb-3">{{ member.first_name[0] }}{{ member.last_name[0] }}</div>
+                <h4>{{ member.full_name }}</h4>
+                <p class="text-muted"><code>{{ member.membership_id }}</code></p>
+                <span class="badge bg-{{ 'success' if member.membership_status == 'active' else 'secondary' }}">{{ member.membership_status|title }}</span>
+                {% if current_user.has_permission('members:edit') %}
+                <div class="mt-3">
+                    <a href="{{ url_for('members.edit', id=member.id) }}" class="btn btn-sm btn-primary">Edit Profile</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">Personal Information</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6"><strong>Email:</strong> {{ member.email or '—' }}</div>
+                    <div class="col-md-6"><strong>Phone:</strong> {{ member.phone or '—' }}</div>
+                    <div class="col-md-6"><strong>Gender:</strong> {{ member.gender or '—' }}</div>
+                    <div class="col-md-6"><strong>Date of Birth:</strong> {{ member.date_of_birth.strftime('%b %d, %Y') if member.date_of_birth else '—' }}</div>
+                    <div class="col-md-6"><strong>Marital Status:</strong> {{ member.marital_status or '—' }}</div>
+                    <div class="col-md-6"><strong>Occupation:</strong> {{ member.occupation or '—' }}</div>
+                    <div class="col-12"><strong>Address:</strong> {{ member.address or '—' }}{% if member.city %}, {{ member.city }}{% endif %}</div>
+                    <div class="col-md-6"><strong>Membership Date:</strong> {{ member.membership_date.strftime('%b %d, %Y') if member.membership_date else '—' }}</div>
+                    <div class="col-md-6"><strong>Baptism:</strong> {{ member.baptism_date.strftime('%b %d, %Y') if member.baptism_date else '—' }}{% if member.baptism_place %} at {{ member.baptism_place }}{% endif %}</div>
+                </div>
+            </div>
+        </div>
+        {% if departments %}
+        <div class="card mt-3">
+            <div class="card-header">Departments</div>
+            <div class="card-body">
+                {% for dm in departments %}
+                <span class="badge bg-primary me-1">{{ dm.department.name }} ({{ dm.role }})</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

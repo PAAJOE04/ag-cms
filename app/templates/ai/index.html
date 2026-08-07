@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}AI Assistant{% endblock %}
+{% block page_title %}AI Church Assistant{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card ai-chat-container">
+            <div class="card-header"><i class="fas fa-robot me-2"></i>Ask me anything about your church</div>
+            <div class="ai-messages" id="ai-messages">
+                <div class="ai-message assistant">
+                    Hello! I'm your AI church assistant. Ask me about members, attendance, finances, events, or request reports and announcements.
+                </div>
+            </div>
+            <div class="card-footer">
+                <form id="ai-form" class="d-flex gap-2">
+                    <input type="text" id="ai-question" class="form-control" placeholder="Ask a question..." autocomplete="off">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">Suggested Questions</div>
+            <div class="card-body ai-suggestions">
+                <span class="badge bg-light text-dark border" onclick="askAI(this.textContent)">How many new members joined this year?</span>
+                <span class="badge bg-light text-dark border" onclick="askAI(this.textContent)">Summarize this month's financial report.</span>
+                <span class="badge bg-light text-dark border" onclick="askAI(this.textContent)">Show birthdays for this month.</span>
+                <span class="badge bg-light text-dark border" onclick="askAI(this.textContent)">Predict next Sunday's attendance.</span>
+                <span class="badge bg-light text-dark border" onclick="askAI(this.textContent)">Generate this week's church announcement.</span>
+                <span class="badge bg-light text-dark border" onclick="askAI(this.textContent)">Which department is growing the fastest?</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('ai-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const q = document.getElementById('ai-question').value.trim();
+    if (q) { askAI(q); document.getElementById('ai-question').value = ''; }
+});
+</script>
+{% endblock %}

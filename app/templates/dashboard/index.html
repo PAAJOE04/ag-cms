@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">Total Members</div>
+                    <div class="stat-value">{{ stats.total_members }}</div>
+                </div>
+                <div class="stat-icon" style="background:rgba(30,58,138,0.1); color:var(--primary);">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">New This Month</div>
+                    <div class="stat-value text-success">{{ stats.new_members_month }}</div>
+                </div>
+                <div class="stat-icon" style="background:rgba(16,185,129,0.1); color:var(--success);">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">Monthly Income</div>
+                    <div class="stat-value">${{ "{:,.0f}".format(stats.monthly_income) }}</div>
+                </div>
+                <div class="stat-icon" style="background:rgba(245,158,11,0.1); color:var(--accent);">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">Today's Attendance</div>
+                    <div class="stat-value">{{ stats.attendance_today }}</div>
+                </div>
+                <div class="stat-icon" style="background:rgba(59,130,246,0.1); color:var(--info);">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-chart-line me-2"></i>Financial Overview</span>
+                <span class="badge bg-success">Net: ${{ "{:,.0f}".format(stats.monthly_income - stats.monthly_expenses) }}</span>
+            </div>
+            <div class="card-body">
+                <canvas id="financeChart" height="120"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="fas fa-history me-2"></i>Recent Activity</div>
+            <div class="card-body p-0">
+                {% for activity in activities %}
+                <div class="activity-item px-3">
+                    <div class="activity-icon" style="background:rgba(30,58,138,0.1); color:var(--primary);">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div>
+                        <div class="small"><strong>{{ activity.action|title }}</strong> — {{ activity.module|title }}</div>
+                        <div class="text-muted" style="font-size:0.8rem;">{{ activity.description or '' }}</div>
+                        <div class="text-muted" style="font-size:0.75rem;">{{ activity.created_at.strftime('%b %d, %Y %H:%M') }}</div>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted p-3 mb-0">No recent activity.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        {% if ai_insights %}
+        <div class="card mb-3">
+            <div class="card-header"><i class="fas fa-robot me-2"></i>AI Insights</div>
+            <div class="card-body">
+                {% for insight in ai_insights %}
+                <div class="alert alert-{{ insight.type }} py-2 mb-2" style="font-size:0.85rem;">
+                    <i class="fas fa-lightbulb me-1"></i> {{ insight.message }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card mb-3">
+            <div class="card-header"><i class="fas fa-birthday-cake me-2"></i>Birthdays</div>
+            <div class="card-body p-0">
+                {% for b in birthdays %}
+                <div class="d-flex align-items-center gap-2 px-3 py-2 border-bottom">
+                    <div class="member-avatar">{{ b.member.first_name[0] }}{{ b.member.last_name[0] }}</div>
+                    <div>
+                        <div class="small fw-semibold">{{ b.member.full_name }}</div>
+                        <div class="text-muted" style="font-size:0.75rem;">{{ b.date.strftime('%b %d') }}</div>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted p-3 mb-0 small">No birthdays this week.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="fas fa-calendar me-2"></i>Upcoming Events</div>
+            <div class="card-body p-0">
+                {% for event in upcoming_events %}
+                <div class="px-3 py-2 border-bottom">
+                    <div class="small fw-semibold">{{ event.title }}</div>
+                    <div class="text-muted" style="font-size:0.75rem;">
+                        <i class="fas fa-clock me-1"></i>{{ event.start_date.strftime('%b %d, %Y %H:%M') }}
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted p-3 mb-0 small">No upcoming events.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+new Chart(document.getElementById('financeChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Income', 'Expenses'],
+        datasets: [{
+            data: [{{ stats.monthly_income }}, {{ stats.monthly_expenses }}],
+            backgroundColor: ['#10B981', '#EF4444'],
+            borderRadius: 8,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+</script>
+{% endblock %}

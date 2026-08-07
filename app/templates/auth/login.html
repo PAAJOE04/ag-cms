@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+
+{% block auth_content %}
+<div class="login-page">
+    <div class="login-card fade-in">
+        <div class="login-logo">
+            <i class="fas fa-church fa-3x mb-3" style="color: var(--primary);"></i>
+            <h2>AG <span class="accent">CMS</span></h2>
+            <p class="text-muted">Church Management System</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} py-2">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-3">
+                <label class="form-label">Username or Email</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                    <input type="text" name="username" class="form-control" required autofocus
+                           placeholder="Enter username or email">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                    <input type="password" name="password" class="form-control" required
+                           placeholder="Enter password">
+                </div>
+            </div>
+            <div class="mb-3 form-check">
+                <input type="checkbox" name="remember" class="form-check-input" id="remember">
+                <label class="form-check-label" for="remember">Remember me</label>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 py-2">
+                <i class="fas fa-sign-in-alt me-2"></i>Sign In
+            </button>
+        </form>
+
+        <p class="text-center text-muted mt-4 mb-0" style="font-size:0.8rem;">
+            &copy; {{ current_year }} AG CMS. All rights reserved.
+        </p>
+    </div>
+</div>
+{% endblock %}
