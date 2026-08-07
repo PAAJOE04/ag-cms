@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Create Event{% endblock %}
+{% block page_title %}Create Event{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-calendar-plus me-2"></i>New Event</div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Event Title *</label>
+                            <input type="text" name="title" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Type *</label>
+                            <select name="event_type" class="form-select" required>
+                                {% for t in event_types %}
+                                <option value="{{ t }}">{{ t }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Location</label>
+                            <input type="text" name="location" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Department</label>
+                            <select name="department_id" class="form-select">
+                                <option value="">None</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept.id }}">{{ dept.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Start Date &amp; Time *</label>
+                            <input type="datetime-local" name="start_date" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">End Date &amp; Time</label>
+                            <input type="datetime-local" name="end_date" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Max Attendees</label>
+                            <input type="number" name="max_attendees" class="form-control" min="1">
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_registration_required" id="regReq" value="1">
+                                <label class="form-check-label" for="regReq">Registration required</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Create Event</button>
+                        <a href="{{ url_for('events.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

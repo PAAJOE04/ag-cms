@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr><th>Notification</th><th>Date</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        {% for notif in notifications %}
+                        <tr class="{{ '' if notif.is_read else 'table-primary' }}">
+                            <td>
+                                <div class="fw-semibold">{{ notif.title }}</div>
+                                <div class="text-muted small">{{ notif.message }}</div>
+                            </td>
+                            <td class="text-nowrap text-muted small">{{ notif.created_at.strftime('%b %d, %Y %H:%M') }}</td>
+                            <td class="text-end">
+                                {% if not notif.is_read %}
+                                <form method="POST" action="{{ url_for('communication.mark_read', id=notif.id) }}" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">Mark Read</button>
+                                </form>
+                                {% else %}
+                                <span class="badge bg-secondary">Read</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center text-muted py-5">No notifications.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

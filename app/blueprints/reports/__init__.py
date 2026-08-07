@@ -71,8 +71,12 @@ def index():
 
     return render_template(
         'reports/index.html',
-        membership_growth=membership_growth,
-        gender_dist=gender_dist,
+        membership_growth=[
+            {'month': int(m), 'count': int(c)} for m, c in membership_growth
+        ],
+        gender_dist=[
+            {'gender': g or 'Unknown', 'count': int(c)} for g, c in gender_dist
+        ],
         financial_trend=financial_trend,
         dept_performance=dept_performance,
     )

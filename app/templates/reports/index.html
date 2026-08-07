@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block page_title %}Reports &amp; Analytics{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-user-plus me-2"></i>Membership Growth (This Year)</div>
+            <div class="card-body"><canvas id="growthChart" height="120"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-venus-mars me-2"></i>Gender Distribution</div>
+            <div class="card-body"><canvas id="genderChart" height="120"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-chart-line me-2"></i>Income Trend (Last 6 Months)</div>
+            <div class="card-body"><canvas id="financeChart" height="120"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-sitemap me-2"></i>Department Membership</div>
+            <div class="card-body"><canvas id="deptChart" height="120"></canvas></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const growth = {{ membership_growth|tojson }};
+new Chart(document.getElementById('growthChart'), {
+    type: 'bar',
+    data: {
+        labels: growth.map(d => 'Month ' + d.month),
+        datasets: [{
+            label: 'New Members',
+            data: growth.map(d => d.count),
+            backgroundColor: '#1E3A8A',
+            borderRadius: 6,
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+});
+
+const gender = {{ gender_dist|tojson }};
+new Chart(document.getElementById('genderChart'), {
+    type: 'pie',
+    data: {
+        labels: gender.map(d => d.gender),
+        datasets: [{
+            data: gender.map(d => d.count),
+            backgroundColor: ['#1E3A8A', '#F59E0B', '#10B981', '#EF4444'],
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+});
+
+const finance = {{ financial_trend|tojson }};
+new Chart(document.getElementById('financeChart'), {
+    type: 'line',
+    data: {
+        labels: finance.map(d => d.month),
+        datasets: [{
+            label: 'Income',
+            data: finance.map(d => d.income),
+            borderColor: '#10B981',
+            backgroundColor: 'rgba(16,185,129,0.1)',
+            fill: true,
+            tension: 0.3,
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+});
+
+const depts = {{ dept_performance|tojson }};
+new Chart(document.getElementById('deptChart'), {
+    type: 'bar',
+    data: {
+        labels: depts.map(d => d.name),
+        datasets: [{
+            label: 'Members',
+            data: depts.map(d => d.members),
+            backgroundColor: '#F59E0B',
+            borderRadius: 6,
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
+    }
+});
+</script>
+{% endblock %}

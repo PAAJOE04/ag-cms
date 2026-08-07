@@ -46,7 +46,15 @@ def view(id):
     members = DepartmentMember.query.filter_by(
         department_id=dept.id, is_active=True
     ).all()
-    return render_template('departments/view.html', department=dept, members=members)
+    all_members = Member.query.filter_by(
+        membership_status='active'
+    ).order_by(Member.last_name).all()
+    return render_template(
+        'departments/view.html',
+        department=dept,
+        members=members,
+        all_members=all_members,
+    )
 
 
 @departments_bp.route('/<int:id>/add-member', methods=['POST'])

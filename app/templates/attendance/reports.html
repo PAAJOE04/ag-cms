@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Attendance Reports{% endblock %}
+{% block page_title %}Attendance Reports{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-body">
+        <form class="d-flex flex-wrap gap-2 align-items-end" method="GET">
+            <div>
+                <label class="form-label small mb-1">Period</label>
+                <select name="period" class="form-select" style="width:auto;">
+                    <option value="daily" {% if period == 'daily' %}selected{% endif %}>Today</option>
+                    <option value="weekly" {% if period == 'weekly' %}selected{% endif %}>This Week</option>
+                    <option value="monthly" {% if period == 'monthly' %}selected{% endif %}>This Month</option>
+                    <option value="yearly" {% if period == 'yearly' %}selected{% endif %}>This Year</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label small mb-1">Service Type</label>
+                <select name="type_id" class="form-select" style="width:auto;">
+                    <option value="">All Types</option>
+                    {% for t in types %}
+                    <option value="{{ t.id }}" {% if type_id == t.id %}selected{% endif %}>{{ t.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Apply</button>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-chart-bar me-2"></i>Attendance Summary ({{ start_date.strftime('%b %d') }} – {{ end_date.strftime('%b %d, %Y') }})</div>
+            <div class="card-body"><canvas id="attendanceChart" height="110"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-calendar-day me-2"></i>Per-Day Totals</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Date</th><th class="text-end">Attendees</th></tr></thead>
+                    <tbody>
+                        {% for date, count in summary %}
+                        <tr><td>{{ date.strftime('%A, %b %d, %Y') }}</td><td class="text-end">{{ count }}</td></tr>
+                        {% else %}
+                        <tr><td colspan="2" class="text-center text-muted py-3">No records.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><i class="fas fa-clipboard-list me-2"></i>Attendance Records</div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr><th>Date</th><th>Member</th><th>Service</th><th>Check-In</th><th>Method</th></tr>
+            </thead>
+            <tbody>
+                {% for record in records.items %}
+                <tr>
+                    <td>{{ record.date.strftime('%b %d, %Y') }}</td>
+                    <td><a href="{{ url_for('members.view', id=record.member.id) }}">{{ record.member.full_name }}</a></td>
+                    <td>{{ record.attendance_type.name }}</td>
+                    <td>{{ record.check_in_time.strftime('%H:%M') if record.check_in_time else '—' }}</td>
+                    <td><span class="badge bg-{{ 'success' if record.check_in_method == 'qr' else 'info' }}">{{ record.check_in_method|title }}</span></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center text-muted py-4">No attendance records.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if records.pages > 1 %}
+<nav class="mt-3"><ul class="pagination justify-content-center">
+    {% for p in records.iter_pages() %}
+    {% if p %}<li class="page-item {% if p == records.page %}active{% endif %}"><a class="page-link" href="?page={{ p }}&period={{ period }}&type_id={{ type_id }}">{{ p }}</a></li>
+    {% else %}<li class="page-item disabled"><span class="page-link">...</span></li>{% endif %}
+    {% endfor %}
+</ul></nav>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const labels = [{% for date, count in summary %}'{{ date.strftime('%b %d') }}',{% endfor %}];
+const values = [{% for date, count in summary %}{{ count }},{% endfor %}];
+new Chart(document.getElementById('attendanceChart'), {
+    type: 'bar',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Attendees',
+            data: values,
+            backgroundColor: '#1E3A8A',
+            borderRadius: 6,
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+});
+</script>
+{% endblock %}

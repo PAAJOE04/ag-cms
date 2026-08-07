@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}{{ event.title }}{% endblock %}
+{% block page_title %}Event Details{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge bg-primary">{{ event.event_type }}</span>
+                    <span class="badge bg-{{ 'success' if event.status == 'upcoming' else 'secondary' }}">{{ event.status|title }}</span>
+                </div>
+                <h4>{{ event.title }}</h4>
+                {% if event.description %}<p class="text-muted">{{ event.description }}</p>{% endif %}
+                <hr>
+                <div class="small">
+                    <div class="mb-2"><i class="fas fa-calendar me-2 text-primary"></i><strong>Starts:</strong> {{ event.start_date.strftime('%b %d, %Y %H:%M') }}</div>
+                    {% if event.end_date %}<div class="mb-2"><i class="fas fa-calendar-check me-2 text-primary"></i><strong>Ends:</strong> {{ event.end_date.strftime('%b %d, %Y %H:%M') }}</div>{% endif %}
+                    {% if event.location %}<div class="mb-2"><i class="fas fa-map-marker-alt me-2 text-primary"></i><strong>Location:</strong> {{ event.location }}</div>{% endif %}
+                    {% if event.department %}<div class="mb-2"><i class="fas fa-sitemap me-2 text-primary"></i><strong>Department:</strong> {{ event.department.name }}</div>{% endif %}
+                    <div class="mb-2"><i class="fas fa-users me-2 text-primary"></i><strong>Registered:</strong> {{ registrations|length }}</div>
+                    {% if event.max_attendees %}<div class="mb-2"><i class="fas fa-door-open me-2 text-primary"></i><strong>Capacity:</strong> {{ event.max_attendees }}</div>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if current_user.has_permission('events:create') %}
+        <div class="card mt-3">
+            <div class="card-header"><i class="fas fa-user-plus me-2"></i>Register Member</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('events.register', id=event.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label class="form-label">Member *</label>
+                    <select name="member_id" class="form-select" required>
+                        <option value="">Select member...</option>
+                        {% for member in members %}
+                        <option value="{{ member.id }}">{{ member.full_name }} ({{ member.membership_id }})</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary btn-sm mt-3"><i class="fas fa-check me-1"></i> Register</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card mb-3">
+            <div class="card-header"><i class="fas fa-clipboard-list me-2"></i>Registrations ({{ registrations|length }})</div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr><th>Name</th><th>Contact</th><th>Registered</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for reg in registrations %}
+                        <tr>
+                            <td>
+                                {% if reg.member %}
+                                <a href="{{ url_for('members.view', id=reg.member.id) }}">{{ reg.member.full_name }}</a>
+                                {% else %}{{ reg.guest_name or 'Guest' }}{% endif %}
+                            </td>
+                            <td>{{ reg.member.phone or reg.guest_phone or '—' }}</td>
+                            <td>{{ reg.registered_at.strftime('%b %d, %Y') }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center text-muted py-4">No registrations yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="fas fa-hands-helping me-2"></i>Volunteers ({{ volunteers|length }})</div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr><th>Name</th><th>Role</th><th>Assigned</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for vol in volunteers %}
+                        <tr>
+                            <td><a href="{{ url_for('members.view', id=vol.member.id) }}">{{ vol.member.full_name }}</a></td>
+                            <td>{{ vol.role or '—' }}</td>
+                            <td>{{ vol.assigned_at.strftime('%b %d, %Y') }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center text-muted py-4">No volunteers assigned.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

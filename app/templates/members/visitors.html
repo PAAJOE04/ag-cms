@@ -1,0 +1,61 @@
+﻿{% extends "base.html" %}
+{% block title %}Visitors{% endblock %}
+{% block page_title %}Visitors{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <p class="text-muted mb-0">First-time visitors to your church.</p>
+    {% if current_user.has_permission('visitors:create') %}
+    <a href="{{ url_for('members.create_visitor') }}" class="btn btn-primary"><i class="fas fa-user-plus me-1"></i> Record Visitor</a>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Visitor</th>
+                    <th>Phone</th>
+                    <th>Visit Date</th>
+                    <th>Invited By</th>
+                    <th>Follow-Up</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for visitor in visitors.items %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="member-avatar">{{ visitor.first_name[0] }}{{ visitor.last_name[0] }}</div>
+                            <div>
+                                <strong>{{ visitor.first_name }} {{ visitor.last_name }}</strong>
+                                {% if visitor.email %}<br><small class="text-muted">{{ visitor.email }}</small>{% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ visitor.phone or 'â€”' }}</td>
+                    <td>{{ visitor.visit_date.strftime('%b %d, %Y') }}</td>
+                    <td>{{ visitor.invited_by or 'â€”' }}</td>
+                    <td>
+                        <span class="badge bg-{{ 'success' if visitor.follow_up_status == 'converted' else 'warning' if visitor.follow_up_status == 'pending' else 'secondary' }}">{{ visitor.follow_up_status|title }}</span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center text-muted py-4">No visitors recorded yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if visitors.pages > 1 %}
+<nav class="mt-3"><ul class="pagination justify-content-center">
+    {% for p in visitors.iter_pages() %}
+    {% if p %}<li class="page-item {% if p == visitors.page %}active{% endif %}"><a class="page-link" href="?page={{ p }}">{{ p }}</a></li>
+    {% else %}<li class="page-item disabled"><span class="page-link">...</span></li>{% endif %}
+    {% endfor %}
+</ul></nav>
+{% endif %}
+{% endblock %}
+

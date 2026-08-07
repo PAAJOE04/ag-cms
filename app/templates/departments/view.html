@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}{{ department.name }}{% endblock %}
+{% block page_title %}Department Details{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h4>{{ department.name }}</h4>
+                {% if department.description %}<p class="text-muted">{{ department.description }}</p>{% endif %}
+                <div class="small">
+                    <div class="mb-2"><i class="fas fa-users me-2 text-primary"></i><strong>Members:</strong> {{ members|length }}</div>
+                    {% if department.leader %}<div class="mb-2"><i class="fas fa-user-tie me-2 text-primary"></i><strong>Leader:</strong> {{ department.leader.full_name }}</div>{% endif %}
+                    <div class="mb-2"><i class="fas fa-calendar me-2 text-primary"></i><strong>Created:</strong> {{ department.created_at.strftime('%b %d, %Y') }}</div>
+                </div>
+            </div>
+        </div>
+
+        {% if current_user.has_permission('departments:edit') %}
+        <div class="card mt-3">
+            <div class="card-header"><i class="fas fa-user-plus me-2"></i>Add Member</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('departments.add_member', id=department.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label">Member *</label>
+                        <select name="member_id" class="form-select" required>
+                            <option value="">Select member...</option>
+                            {% for member in all_members %}
+                            <option value="{{ member.id }}">{{ member.full_name }} ({{ member.membership_id }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <select name="role" class="form-select">
+                            <option value="member">Member</option>
+                            <option value="leader">Leader</option>
+                            <option value="assistant">Assistant</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-plus me-1"></i> Add Member</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-users me-2"></i>Members ({{ members|length }})</div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr><th>Member</th><th>Role</th><th>Joined</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        {% for dm in members %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="member-avatar">{{ dm.member.first_name[0] }}{{ dm.member.last_name[0] }}</div>
+                                    <div>
+                                        <strong>{{ dm.member.full_name }}</strong><br>
+                                        <small class="text-muted">{{ dm.member.membership_id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-{{ 'warning' if dm.role == 'leader' else 'info' if dm.role == 'assistant' else 'secondary' }}">{{ dm.role|title }}</span></td>
+                            <td>{{ dm.joined_date.strftime('%b %d, %Y') if dm.joined_date else '—' }}</td>
+                            <td><a href="{{ url_for('members.view', id=dm.member.id) }}" class="btn btn-sm btn-outline-primary">View</a></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="text-center text-muted py-4">No members in this department yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
