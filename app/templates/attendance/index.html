@@ -30,7 +30,7 @@
             <tbody>
                 {% for record in recent %}
                 <tr>
-                    <td>{{ record.member.full_name }}</td>
+                    <td>{{ record.member.full_name }}{% if record.member.is_visitor %} <span class="badge bg-warning text-dark">Visitor</span>{% endif %}</td>
                     <td>{{ record.attendance_type.name }}</td>
                     <td>{{ record.check_in_time.strftime('%H:%M') }}</td>
                     <td><span class="badge bg-info">{{ record.check_in_method|upper }}</span></td>
