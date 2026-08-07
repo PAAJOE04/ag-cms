@@ -70,6 +70,7 @@
             </div>
         </div>
 
+        {% if can_view_activity %}
         <div class="card">
             <div class="card-header"><i class="fas fa-history me-2"></i>Recent Activity</div>
             <div class="card-body p-0">
@@ -89,6 +90,7 @@
                 {% endfor %}
             </div>
         </div>
+        {% endif %}
     </div>
 
     <div class="col-lg-4">

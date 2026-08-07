@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 
 from flask import Blueprint, render_template
-from flask_login import login_required
+from flask_login import current_user, login_required
 from sqlalchemy import func
 
 from app.extensions import db
@@ -80,8 +80,11 @@ def index():
         Announcement.publish_date.desc()
     ).limit(5).all()
 
-    # Activity feed
-    activities = AuditLog.query.order_by(AuditLog.created_at.desc()).limit(10).all()
+    # Activity feed (visible only to developer and pastor/super admin)
+    can_view_activity = current_user.is_developer() or current_user.is_super_admin()
+    activities = []
+    if can_view_activity:
+        activities = AuditLog.query.order_by(AuditLog.created_at.desc()).limit(10).all()
 
     # AI insights placeholder
     ai_insights = []
@@ -104,5 +107,6 @@ def index():
         birthdays=birthdays[:8],
         announcements=announcements,
         activities=activities,
+        can_view_activity=can_view_activity,
         ai_insights=ai_insights,
     )
