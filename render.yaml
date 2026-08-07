@@ -22,4 +22,4 @@ services:
           name: ag-cms-db
           property: connectionString
       - key: CHURCH_NAME
-        value: Grace Community Church
+        value: Assemblies of God Maranatha Revival Chapel
