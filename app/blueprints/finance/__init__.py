@@ -92,16 +92,18 @@ def record():
         category = TransactionCategory.query.get(
             request.form.get('category_id', type=int)
         )
+        if category is None:
+            flash('Please select a category before saving.', 'danger')
+            return redirect(url_for('finance.record'))
+
         payer_name = request.form.get('payer_name', '').strip()
         wants_receipt = (
-            category is not None
-            and category.requires_receipt
+            category.requires_receipt
             and bool(request.form.get('generate_receipt'))
         )
 
         if (
-            category is not None
-            and category.requires_name
+            category.requires_name
             and category.type == 'income'
             and not payer_name
         ):
@@ -111,7 +113,7 @@ def record():
         tx = Transaction(
             reference=Transaction.generate_reference(),
             type=request.form['type'],
-            category_id=category.id if category else None,
+            category_id=category.id,
             amount=request.form['amount'],
             description=request.form.get('description'),
             payer_name=payer_name,
