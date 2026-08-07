@@ -52,53 +52,59 @@ def index():
 def create():
     """Register a new member."""
     if request.method == 'POST':
-        member = Member(
-            membership_id=Member.generate_membership_id(),
-            first_name=request.form['first_name'],
-            last_name=request.form['last_name'],
-            middle_name=request.form.get('middle_name'),
-            gender=request.form.get('gender'),
-            email=request.form.get('email'),
-            phone=request.form.get('phone'),
-            address=request.form.get('address'),
-            city=request.form.get('city'),
-            occupation=request.form.get('occupation'),
-            marital_status=request.form.get('marital_status'),
-            membership_status='active',
-            membership_date=datetime.utcnow().date(),
-            created_by_id=current_user.id,
-        )
+        saved = None
+        for attempt in range(5):
+            member = Member(
+                membership_id=Member.generate_membership_id(),
+                first_name=request.form['first_name'],
+                last_name=request.form['last_name'],
+                middle_name=request.form.get('middle_name'),
+                gender=request.form.get('gender'),
+                email=request.form.get('email'),
+                phone=request.form.get('phone'),
+                address=request.form.get('address'),
+                city=request.form.get('city'),
+                occupation=request.form.get('occupation'),
+                marital_status=request.form.get('marital_status'),
+                membership_status='active',
+                membership_date=datetime.utcnow().date(),
+                created_by_id=current_user.id,
+            )
 
-        if request.form.get('date_of_birth'):
-            member.date_of_birth = datetime.strptime(
-                request.form['date_of_birth'], '%Y-%m-%d'
-            ).date()
-        if request.form.get('baptism_date'):
-            member.baptism_date = datetime.strptime(
-                request.form['baptism_date'], '%Y-%m-%d'
-            ).date()
-            member.baptism_place = request.form.get('baptism_place')
+            if request.form.get('date_of_birth'):
+                member.date_of_birth = datetime.strptime(
+                    request.form['date_of_birth'], '%Y-%m-%d'
+                ).date()
+            if request.form.get('baptism_date'):
+                member.baptism_date = datetime.strptime(
+                    request.form['baptism_date'], '%Y-%m-%d'
+                ).date()
+                member.baptism_place = request.form.get('baptism_place')
 
-        if 'photo' in request.files:
-            photo = save_upload(request.files['photo'], 'photos')
-            if photo:
-                member.photo = photo
+            if 'photo' in request.files:
+                photo = save_upload(request.files['photo'], 'photos')
+                if photo:
+                    member.photo = photo
 
-        db.session.add(member)
-        db.session.flush()
+            db.session.add(member)
+            db.session.flush()
 
-        try:
-            QRService.generate_member_qr(member)
-            audit_action('create', 'members', f'Created member {member.membership_id}',
-                         resource_type='member', resource_id=member.id)
-            db.session.commit()
-        except IntegrityError:
-            db.session.rollback()
-            flash('Could not save member. A member with the same details may already exist. Please try again.', 'danger')
+            try:
+                QRService.generate_member_qr(member)
+                audit_action('create', 'members', f'Created member {member.membership_id}',
+                             resource_type='member', resource_id=member.id)
+                db.session.commit()
+                saved = member
+                break
+            except IntegrityError:
+                db.session.rollback()
+
+        if saved is None:
+            flash('Could not save member. A record with the same details may already exist. Please try again.', 'danger')
             return redirect(url_for('members.create'))
 
-        flash(f'Member {member.full_name} registered successfully.', 'success')
-        return redirect(url_for('members.view', id=member.id))
+        flash(f'Member {saved.full_name} registered successfully.', 'success')
+        return redirect(url_for('members.view', id=saved.id))
 
     return render_template('members/create.html')
 
