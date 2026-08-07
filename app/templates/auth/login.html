@@ -6,9 +6,9 @@
     <div class="login-card fade-in">
         <div class="login-logo">
             <img src="{{ url_for('static', filename='img/logo.png') }}" alt="{{ church_name }}"
-                 style="width:90px; height:90px; object-fit:contain; margin-bottom:0.75rem;">
-            <h2>AG <span class="accent">CMS</span></h2>
-            <p class="text-muted fw-semibold">{{ church_name }}</p>
+                 style="width:90px; height:90px; object-fit:contain; margin-bottom:0.5rem;">
+            <h2 style="line-height:1.2; letter-spacing:0.02em;">{{ church_name_short|upper }}</h2>
+            <p class="text-muted fw-semibold mb-1" style="letter-spacing:0.04em;">{{ church_name_sub|upper }}</p>
             <p class="text-muted" style="font-size:0.85rem;">Church Management System</p>
         </div>
 

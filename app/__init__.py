@@ -118,8 +118,15 @@ def _register_context_processors(app):
     def inject_globals():
         from app.utils.helpers import amount_to_words, format_currency
 
+        full_name = app.config.get('CHURCH_NAME', 'AG CMS')
+        parts = full_name.split(' ', 3)
+        short_name = parts[0]
+        sub_name = ' '.join(parts[1:])
+
         return {
-            'church_name': app.config.get('CHURCH_NAME', 'AG CMS'),
+            'church_name': full_name,
+            'church_name_short': short_name,
+            'church_name_sub': sub_name,
             'church_address': app.config.get('CHURCH_ADDRESS', ''),
             'church_phone': app.config.get('CHURCH_PHONE', ''),
             'church_email': app.config.get('CHURCH_EMAIL', ''),
