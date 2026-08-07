@@ -13,65 +13,65 @@
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label">First Name *</label>
-                            <input type="text" name="first_name" class="form-control" required>
+                            <input type="text" name="first_name" class="form-control" required value="{{ request.form.get('first_name', '') }}">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Middle Name</label>
-                            <input type="text" name="middle_name" class="form-control">
+                            <input type="text" name="middle_name" class="form-control" value="{{ request.form.get('middle_name', '') }}">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Last Name *</label>
-                            <input type="text" name="last_name" class="form-control" required>
+                            <input type="text" name="last_name" class="form-control" required value="{{ request.form.get('last_name', '') }}">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Gender</label>
                             <select name="gender" class="form-select">
                                 <option value="">Select</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
+                                <option value="Male" {% if request.form.get('gender') == 'Male' %}selected{% endif %}>Male</option>
+                                <option value="Female" {% if request.form.get('gender') == 'Female' %}selected{% endif %}>Female</option>
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Date of Birth</label>
-                            <input type="date" name="date_of_birth" class="form-control">
+                            <input type="date" name="date_of_birth" class="form-control" value="{{ request.form.get('date_of_birth', '') }}">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Marital Status</label>
                             <select name="marital_status" class="form-select">
                                 <option value="">Select</option>
-                                <option value="Single">Single</option>
-                                <option value="Married">Married</option>
-                                <option value="Widowed">Widowed</option>
-                                <option value="Divorced">Divorced</option>
+                                <option value="Single" {% if request.form.get('marital_status') == 'Single' %}selected{% endif %}>Single</option>
+                                <option value="Married" {% if request.form.get('marital_status') == 'Married' %}selected{% endif %}>Married</option>
+                                <option value="Widowed" {% if request.form.get('marital_status') == 'Widowed' %}selected{% endif %}>Widowed</option>
+                                <option value="Divorced" {% if request.form.get('marital_status') == 'Divorced' %}selected{% endif %}>Divorced</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control">
+                            <input type="email" name="email" class="form-control" value="{{ request.form.get('email', '') }}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Phone</label>
-                            <input type="tel" name="phone" class="form-control">
+                            <input type="tel" name="phone" class="form-control" value="{{ request.form.get('phone', '') }}">
                         </div>
                         <div class="col-md-8">
                             <label class="form-label">Address</label>
-                            <input type="text" name="address" class="form-control">
+                            <input type="text" name="address" class="form-control" value="{{ request.form.get('address', '') }}">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">City</label>
-                            <input type="text" name="city" class="form-control">
+                            <input type="text" name="city" class="form-control" value="{{ request.form.get('city', '') }}">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Occupation</label>
-                            <input type="text" name="occupation" class="form-control">
+                            <input type="text" name="occupation" class="form-control" value="{{ request.form.get('occupation', '') }}">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Baptism Date</label>
-                            <input type="date" name="baptism_date" class="form-control">
+                            <input type="date" name="baptism_date" class="form-control" value="{{ request.form.get('baptism_date', '') }}">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Baptism Place</label>
-                            <input type="text" name="baptism_place" class="form-control">
+                            <input type="text" name="baptism_place" class="form-control" value="{{ request.form.get('baptism_place', '') }}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Photo</label>

@@ -52,7 +52,25 @@ def index():
 def create():
     """Register a new member."""
     if request.method == 'POST':
+        def _parse_date(value):
+            if not value:
+                return None
+            try:
+                return datetime.strptime(value, '%Y-%m-%d').date()
+            except ValueError:
+                return 'invalid'
+
+        date_of_birth = _parse_date(request.form.get('date_of_birth'))
+        baptism_date = _parse_date(request.form.get('baptism_date'))
+        if date_of_birth == 'invalid' or baptism_date == 'invalid':
+            flash('One of the dates is invalid. Please check and try again.', 'danger')
+            return render_template('members/create.html')
+        if not request.form.get('first_name') or not request.form.get('last_name'):
+            flash('First name and last name are required.', 'danger')
+            return render_template('members/create.html')
+
         saved = None
+        save_error = False
         for attempt in range(5):
             member = Member(
                 membership_id=Member.generate_membership_id(),
@@ -70,15 +88,10 @@ def create():
                 membership_date=datetime.utcnow().date(),
                 created_by_id=current_user.id,
             )
-
-            if request.form.get('date_of_birth'):
-                member.date_of_birth = datetime.strptime(
-                    request.form['date_of_birth'], '%Y-%m-%d'
-                ).date()
-            if request.form.get('baptism_date'):
-                member.baptism_date = datetime.strptime(
-                    request.form['baptism_date'], '%Y-%m-%d'
-                ).date()
+            if date_of_birth:
+                member.date_of_birth = date_of_birth
+            if baptism_date:
+                member.baptism_date = baptism_date
                 member.baptism_place = request.form.get('baptism_place')
 
             if 'photo' in request.files:
@@ -98,13 +111,20 @@ def create():
                 break
             except IntegrityError:
                 db.session.rollback()
+            except Exception:
+                db.session.rollback()
+                save_error = True
+                break
 
-        if saved is None:
-            flash('Could not save member. A record with the same details may already exist. Please try again.', 'danger')
-            return redirect(url_for('members.create'))
+        if saved is not None:
+            flash(f'Member {saved.full_name} registered successfully.', 'success')
+            return redirect(url_for('members.view', id=saved.id))
 
-        flash(f'Member {saved.full_name} registered successfully.', 'success')
-        return redirect(url_for('members.view', id=saved.id))
+        if save_error:
+            flash('Something went wrong while saving. Nothing was lost — please try again.', 'danger')
+        else:
+            flash('Could not save the member because an ID conflict occurred. Please try again.', 'danger')
+        return render_template('members/create.html')
 
     return render_template('members/create.html')
 
@@ -186,9 +206,19 @@ def edit(id):
             if photo:
                 member.photo = photo
 
-        audit_action('update', 'members', f'Updated member {member.membership_id}',
-                     resource_type='member', resource_id=member.id)
-        db.session.commit()
+        try:
+            audit_action('update', 'members', f'Updated member {member.membership_id}',
+                         resource_type='member', resource_id=member.id)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            flash('Could not update the member because of a conflict. Please try again.', 'danger')
+            return redirect(url_for('members.edit', id=member.id))
+        except Exception:
+            db.session.rollback()
+            flash('Something went wrong while updating. Nothing was lost — please try again.', 'danger')
+            return redirect(url_for('members.edit', id=member.id))
+
         flash('Member updated successfully.', 'success')
         return redirect(url_for('members.view', id=member.id))
 
