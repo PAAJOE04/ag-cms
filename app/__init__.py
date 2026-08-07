@@ -38,6 +38,7 @@ def _auto_seed(app):
     try:
         with app.app_context():
             from seed import (
+                ensure_communication_columns,
                 ensure_finance_columns,
                 rescue_deactivated_defaults,
                 seed_attendance_types,
@@ -48,6 +49,7 @@ def _auto_seed(app):
             )
             db.create_all()
             ensure_finance_columns()
+            ensure_communication_columns()
             seed_roles()
             seed_users()
             rescue_deactivated_defaults()

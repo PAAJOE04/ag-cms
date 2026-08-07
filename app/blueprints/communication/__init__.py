@@ -3,9 +3,11 @@ from datetime import datetime
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import or_
 
 from app.extensions import db
 from app.models.communication import Announcement, Notification
+from app.models.department import Department, DepartmentMember
 from app.utils.decorators import permission_required
 from app.utils.helpers import audit_action, paginate_query
 
@@ -17,10 +19,25 @@ communication_bp = Blueprint('communication', __name__)
 @permission_required('communication:view')
 def index():
     """Communication hub."""
-    announcements = paginate_query(
-        Announcement.query.filter_by(is_published=True).order_by(
-            Announcement.publish_date.desc()
+    query = Announcement.query.filter_by(is_published=True)
+
+    if not (current_user.is_developer() or current_user.is_super_admin()):
+        department_ids = []
+        if current_user.member_id:
+            department_ids = [
+                dm.department_id for dm in DepartmentMember.query.filter_by(
+                    member_id=current_user.member_id, is_active=True
+                ).all()
+            ]
+        query = query.filter(
+            or_(
+                Announcement.target_department_id.is_(None),
+                Announcement.target_department_id.in_(department_ids),
+            )
         )
+
+    announcements = paginate_query(
+        query.order_by(Announcement.publish_date.desc())
     )
     return render_template('communication/index.html', announcements=announcements)
 
@@ -30,6 +47,10 @@ def index():
 @permission_required('communication:create')
 def create_announcement():
     """Create announcement."""
+    departments = Department.query.filter_by(is_active=True).order_by(
+        Department.name
+    ).all()
+
     if request.method == 'POST':
         announcement = Announcement(
             title=request.form['title'],
@@ -37,6 +58,9 @@ def create_announcement():
             category=request.form.get('category', 'general'),
             priority=request.form.get('priority', 'normal'),
             is_published=bool(request.form.get('is_published', True)),
+            target_department_id=request.form.get(
+                'target_department_id', type=int
+            ) or None,
             created_by_id=current_user.id,
         )
         if request.form.get('expiry_date'):
@@ -49,8 +73,11 @@ def create_announcement():
         flash('Announcement published.', 'success')
         return redirect(url_for('communication.index'))
 
-    return render_template('communication/create_announcement.html',
-                           categories=Announcement.CATEGORIES)
+    return render_template(
+        'communication/create_announcement.html',
+        categories=Announcement.CATEGORIES,
+        departments=departments,
+    )
 
 
 @communication_bp.route('/notifications')

@@ -16,8 +16,17 @@
         <div class="card h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-2">
-                    <span class="badge bg-{{ 'danger' if announcement.priority == 'emergency' else 'warning' if announcement.priority == 'high' else 'info' if announcement.category == 'news' else 'secondary' }}">{{ announcement.priority|title }}</span>
-                    <span class="badge bg-primary">{{ announcement.category|title }}</span>
+                    <span>
+                        <span class="badge bg-{{ 'danger' if announcement.priority == 'emergency' else 'warning' if announcement.priority == 'high' else 'info' if announcement.category == 'news' else 'secondary' }}">{{ announcement.priority|title }}</span>
+                        <span class="badge bg-primary">{{ announcement.category|title }}</span>
+                    </span>
+                    <span>
+                        {% if announcement.target_department %}
+                        <span class="badge bg-dark"><i class="fas fa-users me-1"></i>{{ announcement.target_department.name }}</span>
+                        {% else %}
+                        <span class="badge bg-success"><i class="fas fa-globe me-1"></i>Everyone</span>
+                        {% endif %}
+                    </span>
                 </div>
                 <h5 class="card-title">{{ announcement.title }}</h5>
                 <p class="card-text">{{ announcement.content }}</p>

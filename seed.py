@@ -159,6 +159,12 @@ def ensure_finance_columns():
     print('✓ Finance columns ensured')
 
 
+def ensure_communication_columns():
+    """Add announcement targeting columns to existing databases."""
+    _ensure_column('announcements', 'target_department_id', 'INTEGER')
+    print('✓ Communication columns ensured')
+
+
 def seed_departments():
     """Create default departments."""
     for name in Department.DEFAULT_DEPARTMENTS:
@@ -233,6 +239,7 @@ def main():
     with app.app_context():
         db.create_all()
         ensure_finance_columns()
+        ensure_communication_columns()
         seed_roles()
         seed_users()
         seed_attendance_types()

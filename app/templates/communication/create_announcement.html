@@ -18,6 +18,16 @@
                         <label class="form-label">Content *</label>
                         <textarea name="content" class="form-control" rows="4" required></textarea>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Send To</label>
+                        <select name="target_department_id" class="form-select">
+                            <option value="">Everyone (all departments)</option>
+                            {% for d in departments %}
+                            <option value="{{ d.id }}">{{ d.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Pick a department to show this announcement only to members of that ministry.</small>
+                    </div>
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label">Category</label>

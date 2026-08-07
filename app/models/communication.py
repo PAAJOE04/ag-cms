@@ -18,10 +18,12 @@ class Announcement(db.Model):
     publish_date = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     expiry_date = db.Column(db.DateTime)
     target_roles = db.Column(db.JSON)
+    target_department_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     created_by_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     created_by = db.relationship('User')
+    target_department = db.relationship('Department')
 
     CATEGORIES = ['general', 'news', 'emergency', 'meeting', 'event']
 
