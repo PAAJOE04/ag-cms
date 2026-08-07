@@ -138,7 +138,19 @@ def view(id):
     departments = DepartmentMember.query.filter_by(
         member_id=member.id, is_active=True
     ).all()
-    return render_template('members/view.html', member=member, departments=departments)
+    transactions = Transaction.query.filter_by(member_id=member.id).order_by(
+        Transaction.transaction_date.desc(), Transaction.id.desc()
+    ).all()
+    total_giving = sum(
+        float(tx.amount) for tx in transactions if tx.type == 'income'
+    )
+    return render_template(
+        'members/view.html',
+        member=member,
+        departments=departments,
+        transactions=transactions,
+        total_giving=total_giving,
+    )
 
 
 @members_bp.route('/<int:id>/delete', methods=['POST'])

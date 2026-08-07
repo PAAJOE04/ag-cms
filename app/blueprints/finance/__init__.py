@@ -82,6 +82,11 @@ def transactions():
 def record():
     """Record a financial transaction."""
     categories = TransactionCategory.query.filter_by(is_active=True).all()
+    from app.models.member import Member
+    members = Member.query.filter(
+        Member.is_visitor == False,  # noqa: E712
+        Member.membership_status == 'active',
+    ).order_by(Member.first_name, Member.last_name).all()
 
     if request.method == 'POST':
         category = TransactionCategory.query.get(
@@ -140,6 +145,7 @@ def record():
     return render_template(
         'finance/record.html',
         categories=categories,
+        members=members,
         today=datetime.utcnow().date(),
     )
 

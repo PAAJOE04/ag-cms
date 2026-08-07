@@ -112,6 +112,15 @@
                                 <label class="form-label">Name * <span class="text-muted">(the person giving)</span></label>
                                 <input type="text" name="payer_name" id="payerName" class="form-control" placeholder="Full name of the giver">
                             </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Member <span class="text-muted">(optional, if they are a member)</span></label>
+                                <select name="member_id" class="form-select">
+                                    <option value="">— Not a member / skip —</option>
+                                    {% for m in members %}
+                                    <option value="{{ m.id }}">{{ m.full_name }} ({{ m.membership_id }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                         </div>
                     </div>
 

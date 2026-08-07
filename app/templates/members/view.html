@@ -50,6 +50,49 @@
             </div>
         </div>
         {% endif %}
+
+        {% if transactions %}
+        <div class="card mt-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-hand-holding-heart me-2"></i>Giving History</span>
+                <span class="badge bg-success">Total {{ currency_symbol }}{{ format_currency(total_giving) }}</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Reference</th>
+                                <th>Category</th>
+                                <th>Method</th>
+                                <th class="text-end">Amount</th>
+                                <th class="text-center">Receipt</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tx in transactions %}
+                            <tr>
+                                <td>{{ tx.transaction_date.strftime('%b %d, %Y') }}</td>
+                                <td><code>{{ tx.reference }}</code></td>
+                                <td>{{ tx.category.name if tx.category else '—' }}</td>
+                                <td>{{ tx.payment_method|title or '—' }}</td>
+                                <td class="text-end">{{ currency_symbol }}{{ format_currency(tx.amount) }}</td>
+                                <td class="text-center">
+                                    {% if tx.receipt %}
+                                    <a href="{{ url_for('finance.receipt', id=tx.id) }}" class="text-decoration-none" title="View receipt">&#128196;</a>
+                                    {% else %}
+                                    <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
