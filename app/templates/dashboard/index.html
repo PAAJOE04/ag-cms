@@ -5,56 +5,64 @@
 {% block content %}
 <div class="row g-3 mb-4">
     <div class="col-md-3 col-sm-6">
-        <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <div class="stat-label">Total Members</div>
-                    <div class="stat-value">{{ stats.total_members }}</div>
-                </div>
-                <div class="stat-icon" style="background:rgba(30,58,138,0.1); color:var(--primary);">
-                    <i class="fas fa-users"></i>
+        <a href="{{ url_for('members.index') }}" class="text-decoration-none d-block">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-label">Total Members</div>
+                        <div class="stat-value">{{ stats.total_members }}</div>
+                    </div>
+                    <div class="stat-icon" style="background:rgba(30,58,138,0.1); color:var(--primary);">
+                        <i class="fas fa-users"></i>
+                    </div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-md-3 col-sm-6">
-        <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <div class="stat-label">New This Month</div>
-                    <div class="stat-value text-success">{{ stats.new_members_month }}</div>
-                </div>
-                <div class="stat-icon" style="background:rgba(16,185,129,0.1); color:var(--success);">
-                    <i class="fas fa-user-plus"></i>
+        <a href="{{ url_for('members.index') }}" class="text-decoration-none d-block">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-label">New This Month</div>
+                        <div class="stat-value text-success">{{ stats.new_members_month }}</div>
+                    </div>
+                    <div class="stat-icon" style="background:rgba(16,185,129,0.1); color:var(--success);">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-md-3 col-sm-6">
-        <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <div class="stat-label">Monthly Income</div>
-                    <div class="stat-value">{{ currency_symbol }}{{ "{:,.0f}".format(stats.monthly_income) }}</div>
-                </div>
-                <div class="stat-icon" style="background:rgba(245,158,11,0.1); color:var(--accent);">
-                    <i class="fas fa-dollar-sign"></i>
+        <a href="{{ url_for('finance.index') }}" class="text-decoration-none d-block">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-label">Monthly Income</div>
+                        <div class="stat-value">{{ currency_symbol }}{{ "{:,.0f}".format(stats.monthly_income) }}</div>
+                    </div>
+                    <div class="stat-icon" style="background:rgba(245,158,11,0.1); color:var(--accent);">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-md-3 col-sm-6">
-        <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <div class="stat-label">Today's Attendance</div>
-                    <div class="stat-value">{{ stats.attendance_today }}</div>
-                </div>
-                <div class="stat-icon" style="background:rgba(59,130,246,0.1); color:var(--info);">
-                    <i class="fas fa-clipboard-check"></i>
+        <a href="{{ url_for('attendance.index') }}" class="text-decoration-none d-block">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="stat-label">Today's Attendance</div>
+                        <div class="stat-value">{{ stats.attendance_today }}</div>
+                    </div>
+                    <div class="stat-icon" style="background:rgba(59,130,246,0.1); color:var(--info);">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
 </div>
 
