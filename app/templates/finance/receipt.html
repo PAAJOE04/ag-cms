@@ -83,7 +83,9 @@
     <div class="receipt">
         <div class="receipt-header">
             <div>
-                <div class="church-name">{{ church_name }}</div>
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="{{ church_name }}"
+                     style="width:62px; height:62px; object-fit:contain; margin-bottom:0.5rem;">
+                <div class="church-name" style="text-transform:uppercase; letter-spacing:0.03em;">{{ church_name }}</div>
                 <div class="church-meta">
                     {% if church_address %}{{ church_address }}<br>{% endif %}
                     {% if church_phone %}<i class="fas fa-phone"></i> {{ church_phone }}{% endif %}
