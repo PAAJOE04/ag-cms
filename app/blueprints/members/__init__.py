@@ -1,12 +1,18 @@
 """Members management blueprint."""
+import os
 from datetime import datetime
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from app.extensions import db
+from app.models.attendance import Attendance
+from app.models.department import Department, DepartmentMember
+from app.models.event import EventRegistration, EventVolunteer
+from app.models.finance import Transaction
+from app.models.follow_up import FollowUp
 from app.models.member import Member, Family, EmergencyContact, Visitor
-from app.models.department import DepartmentMember
+from app.models.user import User
 from app.services.qr_service import QRService
 from app.utils.decorators import permission_required
 from app.utils.helpers import audit_action, paginate_query, save_upload
@@ -101,6 +107,45 @@ def view(id):
         member_id=member.id, is_active=True
     ).all()
     return render_template('members/view.html', member=member, departments=departments)
+
+
+@members_bp.route('/<int:id>/delete', methods=['POST'])
+@login_required
+@permission_required('members:edit')
+def delete(id):
+    """Delete a member and all related records."""
+    member = Member.query.get_or_404(id)
+    name = member.full_name
+    membership_id = member.membership_id
+
+    for dept in Department.query.filter_by(leader_id=member.id).all():
+        dept.leader_id = None
+    DepartmentMember.query.filter_by(member_id=member.id).delete(synchronize_session=False)
+    Attendance.query.filter_by(member_id=member.id).delete(synchronize_session=False)
+    EventRegistration.query.filter_by(member_id=member.id).delete(synchronize_session=False)
+    EventVolunteer.query.filter_by(member_id=member.id).delete(synchronize_session=False)
+    FollowUp.query.filter_by(member_id=member.id).delete(synchronize_session=False)
+
+    for tx in Transaction.query.filter_by(member_id=member.id).all():
+        tx.member_id = None
+    for user in User.query.filter_by(member_id=member.id).all():
+        user.member_id = None
+    for visitor in Visitor.query.filter_by(converted_member_id=member.id).all():
+        visitor.converted_member_id = None
+
+    db.session.delete(member)
+    db.session.commit()
+
+    qr_path = os.path.join(
+        current_app.config['UPLOAD_FOLDER'], 'qr_codes', f'{membership_id}.png'
+    )
+    if os.path.exists(qr_path):
+        os.remove(qr_path)
+
+    audit_action('delete', 'members', f'Deleted member {membership_id} ({name})',
+                 resource_type='member', resource_id=id)
+    flash(f'Member {name} deleted.', 'success')
+    return redirect(url_for('members.index'))
 
 
 @members_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
