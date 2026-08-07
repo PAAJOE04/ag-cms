@@ -1,0 +1,25 @@
+databases:
+  - name: ag-cms-db
+    plan: free
+    databaseName: ag_cms
+    user: ag_cms
+
+services:
+  - type: web
+    name: ag-cms
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 2 --bind 0.0.0.0:$PORT run:app
+    preDeployCommand: python seed.py
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ag-cms-db
+          property: connectionString
+      - key: CHURCH_NAME
+        value: Grace Community Church
