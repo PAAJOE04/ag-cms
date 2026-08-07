@@ -21,8 +21,43 @@ def create_app(config_name=None):
     _register_blueprints(app)
     _register_context_processors(app)
     _register_error_handlers(app)
+    _auto_seed(app)
 
     return app
+
+
+def _auto_seed(app):
+    """Create tables and essential data on first production boot.
+
+    Render's free tier has no shell or pre-deploy hooks, so the app seeds
+    itself when it starts. Every operation is idempotent, so running this
+    on each boot is safe.
+    """
+    if not app.config.get('AUTO_SEED'):
+        return
+    try:
+        with app.app_context():
+            from seed import (
+                ensure_finance_columns,
+                seed_attendance_types,
+                seed_departments,
+                seed_roles,
+                seed_transaction_categories,
+                seed_users,
+            )
+            db.create_all()
+            ensure_finance_columns()
+            seed_roles()
+            seed_users()
+            seed_attendance_types()
+            seed_transaction_categories()
+            seed_departments()
+            app.logger.info('Production bootstrap complete.')
+    except Exception:
+        db.session.rollback()
+        app.logger.warning(
+            'Production bootstrap skipped (may already be applied).'
+        )
 
 
 def _ensure_directories(app):

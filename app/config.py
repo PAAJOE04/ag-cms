@@ -51,6 +51,7 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.getenv(
         'DATABASE_URL', 'sqlite:///ag_cms.db'
     )
+    AUTO_SEED = False
 
 
 class ProductionConfig(Config):
@@ -59,6 +60,7 @@ class ProductionConfig(Config):
     DEBUG = False
     SESSION_COOKIE_SECURE = True
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    AUTO_SEED = True
 
     if not SQLALCHEMY_DATABASE_URI:
         raise ValueError('DATABASE_URL must be set in production')
