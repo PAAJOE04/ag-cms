@@ -7,7 +7,7 @@ from app.models.finance import (
 )
 from app.models.event import Event, EventRegistration, EventVolunteer
 from app.models.department import Department, DepartmentMember
-from app.models.communication import Announcement, Notification
+from app.models.communication import Announcement, Notification, SmsLog
 from app.models.audit import AuditLog
 from app.models.follow_up import FollowUp, FollowUpAction
 
@@ -18,7 +18,7 @@ __all__ = [
     'Transaction', 'TransactionCategory', 'Budget', 'Receipt',
     'Event', 'EventRegistration', 'EventVolunteer',
     'Department', 'DepartmentMember',
-    'Announcement', 'Notification',
+    'Announcement', 'Notification', 'SmsLog',
     'AuditLog',
     'FollowUp', 'FollowUpAction',
 ]

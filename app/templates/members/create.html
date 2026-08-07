@@ -50,8 +50,9 @@
                             <input type="email" name="email" class="form-control" value="{{ request.form.get('email', '') }}">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Phone</label>
-                            <input type="tel" name="phone" class="form-control" value="{{ request.form.get('phone', '') }}">
+                            <label class="form-label">Phone <span class="text-danger">*</span></label>
+                            <input type="tel" name="phone" class="form-control" required value="{{ request.form.get('phone', '') }}">
+                            <small class="text-muted">Used for church SMS updates.</small>
                         </div>
                         <div class="col-md-8">
                             <label class="form-label">Address</label>

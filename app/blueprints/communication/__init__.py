@@ -6,8 +6,9 @@ from flask_login import current_user, login_required
 from sqlalchemy import or_
 
 from app.extensions import db
-from app.models.communication import Announcement, Notification
+from app.models.communication import Announcement, Notification, SmsLog
 from app.models.department import Department, DepartmentMember
+from app.services.sms_service import notify_announcement
 from app.utils.decorators import permission_required
 from app.utils.helpers import audit_action, paginate_query
 
@@ -42,6 +43,17 @@ def index():
     return render_template('communication/index.html', announcements=announcements)
 
 
+@communication_bp.route('/sms-log')
+@login_required
+@permission_required('communication:create')
+def sms_log():
+    """SMS delivery log."""
+    messages = paginate_query(
+        SmsLog.query.order_by(SmsLog.created_at.desc())
+    )
+    return render_template('communication/sms_log.html', messages=messages)
+
+
 @communication_bp.route('/announcements/create', methods=['GET', 'POST'])
 @login_required
 @permission_required('communication:create')
@@ -70,7 +82,15 @@ def create_announcement():
         db.session.add(announcement)
         audit_action('create', 'communication', f'Created announcement: {announcement.title}')
         db.session.commit()
-        flash('Announcement published.', 'success')
+        sent = notify_announcement(announcement)
+        if sent:
+            flash(f'Announcement published. SMS queued to {sent} member(s).', 'success')
+        else:
+            flash(
+                'Announcement published. No SMS sent (no members with phone '
+                'numbers in the target group).',
+                'success',
+            )
         return redirect(url_for('communication.index'))
 
     return render_template(

@@ -41,6 +41,11 @@ class Config:
 
     OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
 
+    SMS_PROVIDER = os.getenv('SMS_PROVIDER', 'log')  # log, twilio
+    TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID', '')
+    TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN', '')
+    TWILIO_FROM_NUMBER = os.getenv('TWILIO_FROM_NUMBER', '')
+
     ITEMS_PER_PAGE = 20
 
 

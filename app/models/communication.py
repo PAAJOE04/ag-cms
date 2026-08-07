@@ -46,3 +46,26 @@ class Notification(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
     user = db.relationship('User')
+
+
+class SmsLog(db.Model):
+    """SMS message log (demo/log provider by default)."""
+
+    __tablename__ = 'sms_logs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    announcement_id = db.Column(
+        db.Integer, db.ForeignKey('announcements.id'), index=True
+    )
+    recipient_name = db.Column(db.String(200))
+    recipient_phone = db.Column(db.String(20), nullable=False)
+    department_name = db.Column(db.String(120))
+    message = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), default='sent')  # sent, failed
+    provider = db.Column(db.String(20), default='log')  # log, twilio, ...
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    announcement = db.relationship('Announcement')
+
+    def __repr__(self):
+        return f'<SmsLog {self.recipient_phone} {self.status}>'

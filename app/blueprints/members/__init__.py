@@ -68,6 +68,9 @@ def create():
         if not request.form.get('first_name') or not request.form.get('last_name'):
             flash('First name and last name are required.', 'danger')
             return render_template('members/create.html')
+        if not request.form.get('phone', '').strip():
+            flash('Phone number is required — members receive church SMS updates on it.', 'danger')
+            return render_template('members/create.html')
 
         saved = None
         save_error = False
