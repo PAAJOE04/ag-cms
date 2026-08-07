@@ -22,3 +22,5 @@ services:
           property: connectionString
       - key: CHURCH_NAME
         value: Assemblies of God Maranatha Revival Chapel
+      - key: BASE_URL
+        value: https://ag-cms.onrender.com

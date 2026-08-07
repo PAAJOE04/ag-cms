@@ -36,6 +36,10 @@ class Config:
     CHURCH_PHONE = os.getenv('CHURCH_PHONE', '')
     CHURCH_EMAIL = os.getenv('CHURCH_EMAIL', '')
 
+    # Public base URL used for QR codes / external links. When set, QR codes
+    # always point here even if the poster is opened from a local machine.
+    BASE_URL = os.getenv('BASE_URL', '').rstrip('/')
+
     CURRENCY_SYMBOL = os.getenv('CURRENCY_SYMBOL', 'GH₵')
     CURRENCY_CODE = os.getenv('CURRENCY_CODE', 'GHS')
 

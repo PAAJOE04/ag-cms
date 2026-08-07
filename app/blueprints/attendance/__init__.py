@@ -2,7 +2,7 @@
 from datetime import datetime
 
 from flask import (
-    Blueprint, flash, redirect, render_template, request, url_for,
+    Blueprint, current_app, flash, redirect, render_template, request, url_for,
 )
 from flask_login import current_user, login_required
 from sqlalchemy import func
@@ -161,7 +161,11 @@ def mobile():
 @permission_required('attendance:view')
 def poster():
     """Door poster QR that members scan with their own phones."""
-    check_in_url = url_for('attendance.mobile', _external=True)
+    base_url = current_app.config.get('BASE_URL', '')
+    if base_url:
+        check_in_url = f'{base_url}{url_for("attendance.mobile")}'
+    else:
+        check_in_url = url_for('attendance.mobile', _external=True)
     import base64
     qr_data = base64.b64encode(
         QRService.generate_qr_bytes(check_in_url).getvalue()
