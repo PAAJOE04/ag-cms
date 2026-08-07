@@ -93,8 +93,10 @@ def record():
             request.form.get('category_id', type=int)
         )
         payer_name = request.form.get('payer_name', '').strip()
-        wants_receipt = bool(request.form.get('generate_receipt')) or (
-            category is not None and category.requires_receipt
+        wants_receipt = (
+            category is not None
+            and category.requires_receipt
+            and bool(request.form.get('generate_receipt'))
         )
 
         if (
