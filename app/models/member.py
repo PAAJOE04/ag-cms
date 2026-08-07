@@ -96,8 +96,17 @@ class Member(db.Model):
     @staticmethod
     def generate_membership_id():
         """Generate unique membership ID."""
-        count = Member.query.count() + 1
-        return f'AG-{datetime.utcnow().year}-{count:05d}'
+        prefix = f'AG-{datetime.utcnow().year}-'
+        ids = Member.query.filter(
+            Member.membership_id.like(f'{prefix}%')
+        ).with_entities(Member.membership_id).all()
+        numbers = [
+            int(row[0][len(prefix):])
+            for row in ids
+            if row[0][len(prefix):].isdigit()
+        ]
+        seq = (max(numbers) if numbers else 0) + 1
+        return f'{prefix}{seq:05d}'
 
     def __repr__(self):
         return f'<Member {self.membership_id}: {self.full_name}>'

@@ -4,6 +4,7 @@ from datetime import datetime
 
 from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy.exc import IntegrityError
 
 from app.extensions import db
 from app.models.attendance import Attendance
@@ -86,10 +87,15 @@ def create():
         db.session.add(member)
         db.session.flush()
 
-        QRService.generate_member_qr(member)
-        audit_action('create', 'members', f'Created member {member.membership_id}',
-                     resource_type='member', resource_id=member.id)
-        db.session.commit()
+        try:
+            QRService.generate_member_qr(member)
+            audit_action('create', 'members', f'Created member {member.membership_id}',
+                         resource_type='member', resource_id=member.id)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            flash('Could not save member. A member with the same details may already exist. Please try again.', 'danger')
+            return redirect(url_for('members.create'))
 
         flash(f'Member {member.full_name} registered successfully.', 'success')
         return redirect(url_for('members.view', id=member.id))
