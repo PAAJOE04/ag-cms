@@ -7,7 +7,8 @@
         <div class="login-logo">
             <i class="fas fa-church fa-3x mb-3" style="color: var(--primary);"></i>
             <h2>AG <span class="accent">CMS</span></h2>
-            <p class="text-muted">Church Management System</p>
+            <p class="text-muted fw-semibold">{{ church_name }}</p>
+            <p class="text-muted" style="font-size:0.85rem;">Church Management System</p>
         </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -46,7 +47,7 @@
         </form>
 
         <p class="text-center text-muted mt-4 mb-0" style="font-size:0.8rem;">
-            &copy; {{ current_year }} AG CMS. All rights reserved.
+            &copy; {{ current_year }} {{ church_name }}. All rights reserved.
         </p>
     </div>
 </div>
