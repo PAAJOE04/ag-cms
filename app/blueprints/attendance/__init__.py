@@ -57,8 +57,24 @@ def checkin():
         type_id = request.form.get('attendance_type_id', type=int)
         date_str = request.form.get('date', datetime.utcnow().date().isoformat())
 
-        member = Member.query.get_or_404(member_id)
-        att_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        if not member_id:
+            flash('Please select a member before checking in.', 'danger')
+            return redirect(url_for('attendance.checkin'))
+
+        member = Member.query.get(member_id)
+        if not member:
+            flash('Member not found. Please search again.', 'danger')
+            return redirect(url_for('attendance.checkin'))
+
+        if not type_id:
+            flash('Please select a service type.', 'danger')
+            return redirect(url_for('attendance.checkin'))
+
+        try:
+            att_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Please pick a valid date.', 'danger')
+            return redirect(url_for('attendance.checkin'))
 
         existing = Attendance.query.filter_by(
             member_id=member_id,
