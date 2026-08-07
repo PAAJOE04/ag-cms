@@ -20,6 +20,14 @@ from app.utils.permissions import get_permissions_for_role
 RECEIPT_CATEGORIES = {'Donations', 'Building Fund', 'Church Projects'}
 NAME_CATEGORIES = {'Tithes', 'Donations', 'Welfare', 'Thanksgiving', 'Building Fund', 'Church Projects'}
 
+DEFAULT_USERS = [
+    ('developer', 'developer@agcms.local', 'Developer', 'Admin', Role.DEVELOPER, 'dev123456'),
+    ('pastor', 'pastor@church.org', 'John', 'Mensah', Role.SUPER_ADMIN, 'admin123456'),
+    ('secretary', 'secretary@church.org', 'Mary', 'Osei', Role.CHURCH_ADMIN, 'admin123456'),
+    ('finance', 'finance@church.org', 'Kwame', 'Asante', Role.FINANCE_OFFICER, 'admin123456'),
+    ('usher', 'usher@church.org', 'Ama', 'Boateng', Role.ATTENDANCE_OFFICER, 'admin123456'),
+]
+
 
 def seed_roles():
     """Create RBAC roles."""
@@ -41,14 +49,7 @@ def seed_roles():
 
 def seed_users():
     """Create default user accounts."""
-    users = [
-        ('developer', 'developer@agcms.local', 'Developer', 'Admin', Role.DEVELOPER, 'dev123456'),
-        ('pastor', 'pastor@church.org', 'John', 'Mensah', Role.SUPER_ADMIN, 'admin123456'),
-        ('secretary', 'secretary@church.org', 'Mary', 'Osei', Role.CHURCH_ADMIN, 'admin123456'),
-        ('finance', 'finance@church.org', 'Kwame', 'Asante', Role.FINANCE_OFFICER, 'admin123456'),
-        ('usher', 'usher@church.org', 'Ama', 'Boateng', Role.ATTENDANCE_OFFICER, 'admin123456'),
-    ]
-    for username, email, first, last, role_name, password in users:
+    for username, email, first, last, role_name, password in DEFAULT_USERS:
         if not User.query.filter_by(username=username).first():
             role = Role.query.filter_by(name=role_name).first()
             user = User(
@@ -59,6 +60,31 @@ def seed_users():
             db.session.add(user)
     db.session.commit()
     print('✓ Users seeded')
+
+
+def rescue_deactivated_defaults():
+    """Restore default accounts when every user is deactivated.
+
+    Only triggers when no active users exist at all, so intentionally
+    deactivating individual accounts is never overridden. On rescue the
+    default accounts are re-activated and reset to their default
+    passwords so the church always has a way back in.
+    """
+    if User.query.filter_by(is_active=True).count() > 0:
+        return
+    rescued = []
+    for username, email, first, last, role_name, password in DEFAULT_USERS:
+        user = User.query.filter_by(username=username).first()
+        if user:
+            user.is_active = True
+            user.is_locked = False
+            user.locked_until = None
+            user.failed_login_attempts = 0
+            user.set_password(password)
+            rescued.append(username)
+    if rescued:
+        db.session.commit()
+        print('✓ Rescued deactivated default accounts:', ', '.join(rescued))
 
 
 def seed_attendance_types():

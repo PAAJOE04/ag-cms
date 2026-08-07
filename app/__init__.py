@@ -39,6 +39,7 @@ def _auto_seed(app):
         with app.app_context():
             from seed import (
                 ensure_finance_columns,
+                rescue_deactivated_defaults,
                 seed_attendance_types,
                 seed_departments,
                 seed_roles,
@@ -49,6 +50,7 @@ def _auto_seed(app):
             ensure_finance_columns()
             seed_roles()
             seed_users()
+            rescue_deactivated_defaults()
             seed_attendance_types()
             seed_transaction_categories()
             seed_departments()
