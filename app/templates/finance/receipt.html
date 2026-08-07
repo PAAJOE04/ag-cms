@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt {{ receipt.receipt_number }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f1f5f9;
+            color: #111827;
+        }
+        .toolbar {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 0.75rem; padding: 1rem 1.5rem;
+            background: #1E3A8A; color: #fff;
+            position: sticky; top: 0; z-index: 10;
+        }
+        .toolbar .title { font-weight: 700; }
+        .toolbar .actions { display: flex; gap: 0.5rem; }
+        .btn {
+            border: none; border-radius: 0.375rem; padding: 0.5rem 1rem;
+            font-weight: 600; cursor: pointer; text-decoration: none; font-size: 0.9rem;
+        }
+        .btn-print { background: #fff; color: #1E3A8A; }
+        .btn-back { background: rgba(255,255,255,0.15); color: #fff; }
+        .btn:hover { opacity: 0.9; }
+
+        .receipt {
+            max-width: 720px; margin: 2rem auto; background: #fff;
+            border: 1px solid #e5e7eb; border-radius: 0.5rem;
+            padding: 2.5rem 3rem; box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .receipt-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #1E3A8A; padding-bottom: 1.25rem; margin-bottom: 1.5rem; }
+        .church-name { font-size: 1.3rem; font-weight: 800; color: #1E3A8A; }
+        .church-meta { color: #6b7280; font-size: 0.85rem; margin-top: 0.25rem; line-height: 1.5; }
+        .receipt-title { text-align: right; }
+        .receipt-title h1 { font-size: 1.2rem; color: #111827; text-transform: uppercase; letter-spacing: 0.05em; }
+        .receipt-title .no { font-size: 0.85rem; color: #374151; margin-top: 0.25rem; }
+
+        .receipt-body { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem 2rem; margin-bottom: 1.5rem; }
+        .field-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; font-weight: 700; }
+        .field-value { font-size: 0.95rem; color: #111827; margin-top: 0.15rem; }
+
+        table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+        th { text-align: left; background: #f3f4f6; padding: 0.55rem 0.75rem; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: #4b5563; }
+        td { padding: 0.6rem 0.75rem; border-bottom: 1px solid #e5e7eb; font-size: 0.92rem; }
+        .amount-word {
+            border-top: 2px solid #1E3A8A; border-bottom: 2px solid #1E3A8A;
+            padding: 1rem 0; margin-bottom: 1.25rem;
+            font-size: 0.95rem;
+        }
+        .amount-word b { color: #1E3A8A; }
+        .amount-big {
+            display: flex; justify-content: flex-end; align-items: baseline; gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+        .amount-big .lbl { color: #6b7280; font-size: 0.85rem; }
+        .amount-big .amt { font-size: 2rem; font-weight: 800; color: #1E3A8A; }
+        .signature {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem;
+        }
+        .signature .line { border-top: 1px solid #9ca3af; margin-top: 0.5rem; padding-top: 0.4rem; font-size: 0.8rem; color: #6b7280; text-align: center; }
+        .receipt-footer { margin-top: 2.5rem; text-align: center; font-size: 0.75rem; color: #9ca3af; border-top: 1px dashed #e5e7eb; padding-top: 1rem; }
+
+        @media print {
+            body { background: #fff; }
+            .toolbar { display: none !important; }
+            .receipt { margin: 0; box-shadow: none; border: none; max-width: none; padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="title"><i class="fas fa-file-invoice"></i> Receipt Preview</div>
+        <div class="actions">
+            <a href="{{ url_for('finance.receipts') }}" class="btn btn-back">All Receipts</a>
+            <button class="btn btn-print" onclick="window.print()"><i class="fas fa-print"></i> Print Receipt</button>
+        </div>
+    </div>
+
+    <div class="receipt">
+        <div class="receipt-header">
+            <div>
+                <div class="church-name">{{ church_name }}</div>
+                <div class="church-meta">
+                    {% if church_address %}{{ church_address }}<br>{% endif %}
+                    {% if church_phone %}<i class="fas fa-phone"></i> {{ church_phone }}{% endif %}
+                    {% if church_email %} | {{ church_email }}{% endif %}
+                </div>
+            </div>
+            <div class="receipt-title">
+                <h1>Official Receipt</h1>
+                <div class="no"><strong>No:</strong> {{ receipt.receipt_number }}</div>
+            </div>
+        </div>
+
+        <div class="receipt-body">
+            <div>
+                <div class="field-label">Issued To</div>
+                <div class="field-value">{{ receipt.issued_to or '—' }}</div>
+            </div>
+            <div>
+                <div class="field-label">Date Issued</div>
+                <div class="field-value">{{ receipt.issued_at.strftime('%B %d, %Y') }}</div>
+            </div>
+            <div>
+                <div class="field-label">Transaction Reference</div>
+                <div class="field-value">{{ receipt.transaction.reference }}</div>
+            </div>
+            <div>
+                <div class="field-label">Transaction Date</div>
+                <div class="field-value">{{ receipt.transaction.transaction_date.strftime('%B %d, %Y') }}</div>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr><th>Category</th><th>Type</th><th>Payment Method</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ receipt.transaction.category.name if receipt.transaction.category else '—' }}</td>
+                    <td>{{ receipt.transaction.type|title }}</td>
+                    <td>{{ receipt.transaction.payment_method|title or '—' }}</td>
+                    <td>{{ receipt.transaction.description or '—' }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="amount-word">
+            <span class="field-label">Amount in Words</span><br>
+            <b>{{ amount_to_words(receipt.transaction.amount) }}</b>
+        </div>
+
+        <div class="amount-big">
+            <span class="lbl">Total Amount:</span>
+            <span class="amt">{{ format_currency(receipt.transaction.amount) }}</span>
+        </div>
+
+        <div class="signature">
+            <div>
+                <div class="field-label">Issued By</div>
+                <div>{{ receipt.issued_by.full_name if receipt.issued_by else '—' }}</div>
+                <div class="line">Authorized Signature</div>
+            </div>
+            <div>
+                <div class="field-label">Received By</div>
+                <div>{{ receipt.issued_to or '—' }}</div>
+                <div class="line">Signature</div>
+            </div>
+        </div>
+
+        <div class="receipt-footer">
+            Thank you for your generous support. {{ church_name }} &copy; {{ current_year }}
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+</body>
+</html>

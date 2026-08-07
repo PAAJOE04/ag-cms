@@ -79,10 +79,17 @@ def _register_context_processors(app):
 
     @app.context_processor
     def inject_globals():
+        from app.utils.helpers import amount_to_words, format_currency
+
         return {
             'church_name': app.config.get('CHURCH_NAME', 'AG CMS'),
+            'church_address': app.config.get('CHURCH_ADDRESS', ''),
+            'church_phone': app.config.get('CHURCH_PHONE', ''),
+            'church_email': app.config.get('CHURCH_EMAIL', ''),
             'current_year': datetime.utcnow().year,
             'currency_symbol': app.config.get('CURRENCY_SYMBOL', 'GH₵'),
+            'format_currency': format_currency,
+            'amount_to_words': amount_to_words,
         }
 
 

@@ -68,6 +68,56 @@ def format_currency(amount):
     return f'{symbol}{float(amount):,.2f}'
 
 
+def amount_to_words(amount):
+    """Convert an amount to words (Ghanaian Cedis and Pesewas)."""
+    amount = float(amount or 0)
+    cedis = int(amount)
+    pesewas = int(round((amount - cedis) * 100))
+
+    _ones = ('', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven',
+             'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen',
+             'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen',
+             'Nineteen')
+    _tens = ('', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty',
+             'Seventy', 'Eighty', 'Ninety')
+
+    def two_digits(n):
+        if n < 20:
+            return _ones[n]
+        tens, ones = divmod(n, 10)
+        return _tens[tens] + ('-' + _ones[ones] if ones else '')
+
+    def three_digits(n):
+        hundreds, rest = divmod(n, 100)
+        words = []
+        if hundreds:
+            words.append(_ones[hundreds] + ' Hundred')
+        if rest:
+            words.append(two_digits(rest))
+        return ' '.join(words)
+
+    if cedis == 0:
+        cedis_words = 'Zero'
+    else:
+        groups = []
+        parts = []
+        n = cedis
+        while n:
+            parts.append(n % 1000)
+            n //= 1000
+        scales = ('', ' Thousand', ' Million', ' Billion', ' Trillion')
+        for i, part in enumerate(parts):
+            if part:
+                groups.append(three_digits(part) + scales[i])
+        cedis_words = ', '.join(reversed(groups))
+
+    result = f'{cedis_words} Cedis'
+    if pesewas:
+        result += f', {two_digits(pesewas)} Pesewas'
+    result += ' Only'
+    return result
+
+
 def get_date_range(period):
     """Return start/end dates for a reporting period."""
     today = datetime.utcnow().date()

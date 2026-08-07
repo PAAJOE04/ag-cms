@@ -7,7 +7,6 @@ from sqlalchemy import func
 
 from app.extensions import db
 from app.models.finance import Transaction, TransactionCategory, Budget, Receipt
-from app.models.member import Member
 from app.utils.decorators import permission_required
 from app.utils.helpers import audit_action, format_currency, get_date_range, paginate_query
 
@@ -85,10 +84,16 @@ def record():
     categories = TransactionCategory.query.filter_by(is_active=True).all()
 
     if request.method == 'POST':
+        category = TransactionCategory.query.get(
+            request.form.get('category_id', type=int)
+        )
+        wants_receipt = bool(request.form.get('generate_receipt')) or (
+            category is not None and category.requires_receipt
+        )
         tx = Transaction(
             reference=Transaction.generate_reference(),
             type=request.form['type'],
-            category_id=request.form.get('category_id', type=int),
+            category_id=category.id if category else None,
             amount=request.form['amount'],
             description=request.form.get('description'),
             member_id=request.form.get('member_id', type=int) or None,
@@ -101,7 +106,8 @@ def record():
         db.session.add(tx)
         db.session.flush()
 
-        if tx.type == 'income' and request.form.get('generate_receipt'):
+        receipt_id = None
+        if wants_receipt:
             receipt = Receipt(
                 receipt_number=Receipt.generate_number(),
                 transaction_id=tx.id,
@@ -109,19 +115,39 @@ def record():
                 issued_by_id=current_user.id,
             )
             db.session.add(receipt)
+            db.session.flush()
+            receipt_id = receipt.id
 
         audit_action('create', 'finance', f'Recorded {tx.type} transaction {tx.reference}')
         db.session.commit()
         flash(f'Transaction {tx.reference} recorded.', 'success')
+        if receipt_id:
+            return redirect(url_for('finance.receipt', id=receipt_id))
         return redirect(url_for('finance.transactions'))
 
-    members = Member.query.filter_by(membership_status='active').order_by(Member.last_name).all()
     return render_template(
         'finance/record.html',
         categories=categories,
-        members=members,
         today=datetime.utcnow().date(),
     )
+
+
+@finance_bp.route('/receipts')
+@login_required
+@permission_required('finance:view')
+def receipts():
+    """List issued receipts."""
+    records = paginate_query(Receipt.query.order_by(Receipt.issued_at.desc()))
+    return render_template('finance/receipts.html', records=records)
+
+
+@finance_bp.route('/receipt/<int:id>')
+@login_required
+@permission_required('finance:view')
+def receipt(id):
+    """Preview / print a receipt."""
+    receipt = Receipt.query.get_or_404(id)
+    return render_template('finance/receipt.html', receipt=receipt)
 
 
 @finance_bp.route('/budgets')

@@ -4,81 +4,125 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-lg-8">
+    <div class="col-lg-9">
         <div class="card">
-            <div class="card-header"><i class="fas fa-plus-circle me-2"></i>New Transaction</div>
+            <div class="card-header"><i class="fas fa-plus-circle me-2"></i>Record Transaction</div>
             <div class="card-body">
                 <form method="POST">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <div class="mb-3">
-                        <label class="form-label">Type *</label>
-                        <div class="d-flex gap-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="type" id="typeIncome" value="income" checked onchange="filterCategories()">
-                                <label class="form-check-label text-success" for="typeIncome"><i class="fas fa-arrow-down me-1"></i>Income</label>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">1. Section</label>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="section-card">
+                                    <input type="radio" name="type" value="income" checked onchange="setSection('income')">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <div class="fw-semibold text-success"><i class="fas fa-arrow-down me-1"></i>Income</div>
+                                            <small class="text-muted">Tithes, offerings, donations</small>
+                                        </div>
+                                        <div class="section-check"><i class="fas fa-check"></i></div>
+                                    </div>
+                                </label>
                             </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="type" id="typeExpense" value="expense" onchange="filterCategories()">
-                                <label class="form-check-label text-danger" for="typeExpense"><i class="fas fa-arrow-up me-1"></i>Expense</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Category *</label>
-                            <select name="category_id" id="categorySelect" class="form-select" required>
-                                <option value="">Select category...</option>
-                                {% for cat in categories %}
-                                <option value="{{ cat.id }}" data-type="{{ cat.type }}">{{ cat.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Amount *</label>
-                            <div class="input-group">
-                                <span class="input-group-text">{{ currency_symbol }}</span>
-                                <input type="number" name="amount" class="form-control" step="0.01" min="0.01" placeholder="0.00" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Date *</label>
-                            <input type="date" name="transaction_date" class="form-control" value="{{ today }}" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Payment Method</label>
-                            <select name="payment_method" class="form-select">
-                                <option value="">Select...</option>
-                                <option value="cash">Cash</option>
-                                <option value="mobile">Mobile Money</option>
-                                <option value="transfer">Bank Transfer</option>
-                                <option value="check">Cheque</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Member</label>
-                            <select name="member_id" class="form-select">
-                                <option value="">None</option>
-                                {% for member in members %}
-                                <option value="{{ member.id }}">{{ member.full_name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Description</label>
-                            <textarea name="description" class="form-control" rows="2"></textarea>
-                        </div>
-                        <div class="col-12" id="receiptSection">
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" name="generate_receipt" id="genReceipt" value="1">
-                                <label class="form-check-label" for="genReceipt">Generate receipt</label>
-                            </div>
-                            <div id="issuedToField" class="d-none">
-                                <label class="form-label">Issued To</label>
-                                <input type="text" name="issued_to" class="form-control" placeholder="Name of giver">
+                            <div class="col-md-6">
+                                <label class="section-card">
+                                    <input type="radio" name="type" value="expense" onchange="setSection('expense')">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <div class="fw-semibold text-danger"><i class="fas fa-arrow-up me-1"></i>Expenses</div>
+                                            <small class="text-muted">Utilities, projects, salaries</small>
+                                        </div>
+                                        <div class="section-check"><i class="fas fa-check"></i></div>
+                                    </div>
+                                </label>
                             </div>
                         </div>
                     </div>
-                    <div class="mt-4 d-flex gap-2">
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">2. Allocate To</label>
+                        <div id="categoryGroupIncome" class="category-group">
+                            <div class="section-heading"><i class="fas fa-arrow-down me-1"></i>Income Categories</div>
+                            <div class="row g-2">
+                                {% for cat in categories if cat.type == 'income' %}
+                                <div class="col-md-4">
+                                    <label class="cat-option">
+                                        <input type="radio" name="category_id" value="{{ cat.id }}" data-receipt="{{ '1' if cat.requires_receipt else '0' }}" onchange="onCategory(this)">
+                                        <span>{{ cat.name }}</span>
+                                        {% if cat.requires_receipt %}<span class="badge bg-warning text-dark">Receipt</span>{% endif %}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div id="categoryGroupExpense" class="category-group d-none">
+                            <div class="section-heading"><i class="fas fa-arrow-up me-1"></i>Expense Categories</div>
+                            <div class="row g-2">
+                                {% for cat in categories if cat.type == 'expense' %}
+                                <div class="col-md-4">
+                                    <label class="cat-option">
+                                        <input type="radio" name="category_id" value="{{ cat.id }}" data-receipt="{{ '1' if cat.requires_receipt else '0' }}" onchange="onCategory(this)">
+                                        <span>{{ cat.name }}</span>
+                                        {% if cat.requires_receipt %}<span class="badge bg-warning text-dark">Receipt</span>{% endif %}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div id="noCategory" class="text-muted small d-none">No categories in this section.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">3. Details</label>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Amount *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">{{ currency_symbol }}</span>
+                                    <input type="number" name="amount" class="form-control" step="0.01" min="0.01" placeholder="0.00" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Date *</label>
+                                <input type="date" name="transaction_date" class="form-control" value="{{ today }}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Payment Method</label>
+                                <select name="payment_method" class="form-select">
+                                    <option value="">Select...</option>
+                                    <option value="cash">Cash</option>
+                                    <option value="mobile">Mobile Money</option>
+                                    <option value="transfer">Bank Transfer</option>
+                                    <option value="check">Cheque</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Description</label>
+                                <textarea name="description" class="form-control" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="receiptSection" class="mb-4 d-none">
+                        <label class="form-label fw-semibold">4. Receipt</label>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Name <span class="text-muted">(Donor / Vendor / Project)</span></label>
+                                <input type="text" name="issued_to" class="form-control" placeholder="Name to appear on the receipt">
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="generate_receipt" id="genReceipt" value="1" checked>
+                                    <label class="form-check-label" for="genReceipt"><i class="fas fa-file-invoice me-1"></i>Issue receipt</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert alert-light border small mt-2 mb-0"><i class="fas fa-info-circle me-1 text-info"></i>A receipt will be generated and shown for preview before you print it.</div>
+                    </div>
+
+                    <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Transaction</button>
                         <a href="{{ url_for('finance.transactions') }}" class="btn btn-outline-secondary">Cancel</a>
                     </div>
@@ -90,21 +134,84 @@
 {% endblock %}
 
 {% block extra_js %}
+<style>
+    .section-card {
+        display: block;
+        border: 2px solid var(--border, #dee2e6);
+        border-radius: 0.75rem;
+        padding: 0.9rem 1.1rem;
+        cursor: pointer;
+        transition: border-color 0.15s ease, background 0.15s ease;
+        height: 100%;
+    }
+    .section-card input { display: none; }
+    .section-card:has(input:checked) {
+        border-color: var(--primary, #1E3A8A);
+        background: rgba(30, 58, 138, 0.05);
+    }
+    .section-check {
+        width: 24px; height: 24px;
+        border-radius: 50%;
+        border: 2px solid var(--border, #dee2e6);
+        display: flex; align-items: center; justify-content: center;
+        color: transparent; font-size: 0.7rem;
+    }
+    .section-card:has(input:checked) .section-check {
+        background: var(--primary, #1E3A8A);
+        border-color: var(--primary, #1E3A8A);
+        color: #fff;
+    }
+    .section-heading {
+        font-weight: 600;
+        color: var(--muted, #6c757d);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.6rem;
+    }
+    .cat-option {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 1px solid var(--border, #dee2e6);
+        border-radius: 0.5rem;
+        padding: 0.55rem 0.8rem;
+        cursor: pointer;
+        transition: border-color 0.15s ease, background 0.15s ease;
+        height: 100%;
+    }
+    .cat-option input { display: none; }
+    .cat-option:has(input:checked) {
+        border-color: var(--primary, #1E3A8A);
+        background: rgba(30, 58, 138, 0.06);
+        font-weight: 600;
+    }
+    .cat-option:has(input:checked)::before {
+        content: '\f00c';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        color: var(--primary, #1E3A8A);
+    }
+</style>
 <script>
-function filterCategories() {
-    const type = document.querySelector('input[name="type"]:checked').value;
-    document.querySelectorAll('#categorySelect option[data-type]').forEach(opt => {
-        opt.disabled = opt.dataset.type !== type;
-    });
-    const sel = document.getElementById('categorySelect');
-    if (sel.value) {
-        const chosen = sel.options[sel.selectedIndex];
-        if (chosen.dataset.type && chosen.dataset.type !== type) sel.value = '';
+function setSection(type) {
+    document.getElementById('categoryGroupIncome').classList.toggle('d-none', type !== 'income');
+    document.getElementById('categoryGroupExpense').classList.toggle('d-none', type !== 'expense');
+    document.querySelectorAll('input[name="category_id"]').forEach(r => { r.checked = false; });
+    hideReceipt();
+}
+function onCategory(el) {
+    if (el.dataset.receipt === '1') {
+        showReceipt();
+    } else {
+        hideReceipt();
     }
 }
-document.getElementById('genReceipt').addEventListener('change', function () {
-    document.getElementById('issuedToField').classList.toggle('d-none', !this.checked);
-});
-filterCategories();
+function showReceipt() {
+    document.getElementById('receiptSection').classList.remove('d-none');
+}
+function hideReceipt() {
+    document.getElementById('receiptSection').classList.add('d-none');
+}
 </script>
 {% endblock %}

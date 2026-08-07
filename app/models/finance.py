@@ -14,6 +14,7 @@ class TransactionCategory(db.Model):
     type = db.Column(db.String(10), nullable=False)  # income, expense
     description = db.Column(db.String(255))
     is_active = db.Column(db.Boolean, default=True)
+    requires_receipt = db.Column(db.Boolean, default=False)
 
     transactions = db.relationship('Transaction', back_populates='category', lazy='dynamic')
 
