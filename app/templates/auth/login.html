@@ -5,7 +5,8 @@
 <div class="login-page">
     <div class="login-card fade-in">
         <div class="login-logo">
-            <i class="fas fa-church fa-3x mb-3" style="color: var(--primary);"></i>
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="{{ church_name }}"
+                 style="width:90px; height:90px; object-fit:contain; margin-bottom:0.75rem;">
             <h2>AG <span class="accent">CMS</span></h2>
             <p class="text-muted fw-semibold">{{ church_name }}</p>
             <p class="text-muted" style="font-size:0.85rem;">Church Management System</p>
