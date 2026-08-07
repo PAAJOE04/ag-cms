@@ -25,8 +25,8 @@
                     <th>Date</th>
                     <th>Type</th>
                     <th>Category</th>
+                    <th>Name</th>
                     <th>Description</th>
-                    <th>Member</th>
                     <th>Method</th>
                     <th class="text-end">Amount</th>
                 </tr>
@@ -44,8 +44,8 @@
                         {% endif %}
                     </td>
                     <td>{{ tx.category.name if tx.category else '—' }}</td>
+                    <td>{{ tx.payer_name or (tx.member.full_name if tx.member else '—') }}</td>
                     <td>{{ tx.description or '—' }}</td>
-                    <td>{{ tx.member.full_name if tx.member else '—' }}</td>
                     <td>{{ tx.payment_method or '—' }}</td>
                     <td class="text-end fw-semibold text-{{ 'success' if tx.type == 'income' else 'danger' }}">
                         {{ '+' if tx.type == 'income' else '-' }}{{ currency_symbol }}{{ "{:,.2f}".format(tx.amount) }}

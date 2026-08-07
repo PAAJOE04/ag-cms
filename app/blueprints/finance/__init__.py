@@ -87,15 +87,27 @@ def record():
         category = TransactionCategory.query.get(
             request.form.get('category_id', type=int)
         )
+        payer_name = request.form.get('payer_name', '').strip()
         wants_receipt = bool(request.form.get('generate_receipt')) or (
             category is not None and category.requires_receipt
         )
+
+        if (
+            category is not None
+            and category.requires_name
+            and category.type == 'income'
+            and not payer_name
+        ):
+            flash(f'Please enter the name of the giver for {category.name}.', 'danger')
+            return redirect(url_for('finance.record'))
+
         tx = Transaction(
             reference=Transaction.generate_reference(),
             type=request.form['type'],
             category_id=category.id if category else None,
             amount=request.form['amount'],
             description=request.form.get('description'),
+            payer_name=payer_name,
             member_id=request.form.get('member_id', type=int) or None,
             payment_method=request.form.get('payment_method'),
             transaction_date=datetime.strptime(
@@ -111,7 +123,7 @@ def record():
             receipt = Receipt(
                 receipt_number=Receipt.generate_number(),
                 transaction_id=tx.id,
-                issued_to=request.form.get('issued_to', ''),
+                issued_to=payer_name,
                 issued_by_id=current_user.id,
             )
             db.session.add(receipt)

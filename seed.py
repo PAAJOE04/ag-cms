@@ -18,6 +18,7 @@ from app.models.communication import Announcement
 from app.utils.permissions import get_permissions_for_role
 
 RECEIPT_CATEGORIES = {'Donations', 'Building Fund', 'Church Projects'}
+NAME_CATEGORIES = {'Tithes', 'Donations', 'Welfare', 'Thanksgiving', 'Building Fund', 'Church Projects'}
 
 
 def seed_roles():
@@ -82,6 +83,7 @@ def seed_transaction_categories():
             db.session.add(TransactionCategory(
                 name=name, type='income',
                 requires_receipt=name in RECEIPT_CATEGORIES,
+                requires_name=name in NAME_CATEGORIES,
             ))
     for name in TransactionCategory.EXPENSE_CATEGORIES:
         cat = TransactionCategory.query.filter_by(name=name).first()
@@ -89,36 +91,46 @@ def seed_transaction_categories():
             db.session.add(TransactionCategory(
                 name=name, type='expense',
                 requires_receipt=name in RECEIPT_CATEGORIES,
+                requires_name=name in NAME_CATEGORIES,
             ))
-    for name in RECEIPT_CATEGORIES:
+    for name in RECEIPT_CATEGORIES | NAME_CATEGORIES:
         cat = TransactionCategory.query.filter_by(name=name).first()
-        if cat and not cat.requires_receipt:
-            cat.requires_receipt = True
+        if cat:
+            if name in RECEIPT_CATEGORIES and not cat.requires_receipt:
+                cat.requires_receipt = True
+            if name in NAME_CATEGORIES and not cat.requires_name:
+                cat.requires_name = True
     db.session.commit()
     print('✓ Transaction categories seeded')
 
 
-def ensure_category_receipt_column():
-    """Add requires_receipt column to transaction_categories if missing."""
+def _ensure_column(table, column, definition):
+    """Add a column to a table if it does not exist yet."""
     from sqlalchemy import inspect, text
 
     inspector = inspect(db.engine)
-    if 'transaction_categories' not in inspector.get_table_names():
+    if table not in inspector.get_table_names():
         return
-    columns = [col['name'] for col in inspector.get_columns('transaction_categories')]
-    if 'requires_receipt' in columns:
+    columns = [col['name'] for col in inspector.get_columns(table)]
+    if column in columns:
         return
     if db.engine.dialect.name == 'postgresql':
         db.session.execute(text(
-            'ALTER TABLE transaction_categories '
-            'ADD COLUMN IF NOT EXISTS requires_receipt BOOLEAN'
+            f'ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {definition}'
         ))
     else:
         db.session.execute(text(
-            'ALTER TABLE transaction_categories ADD COLUMN requires_receipt BOOLEAN'
+            f'ALTER TABLE {table} ADD COLUMN {column} {definition}'
         ))
     db.session.commit()
-    print('✓ Added requires_receipt column')
+
+
+def ensure_finance_columns():
+    """Add finance columns to existing databases."""
+    _ensure_column('transaction_categories', 'requires_receipt', 'BOOLEAN')
+    _ensure_column('transaction_categories', 'requires_name', 'BOOLEAN')
+    _ensure_column('transactions', 'payer_name', 'VARCHAR(120)')
+    print('✓ Finance columns ensured')
 
 
 def seed_departments():
@@ -194,7 +206,7 @@ def main():
     app = create_app(os.getenv('FLASK_ENV', 'development'))
     with app.app_context():
         db.create_all()
-        ensure_category_receipt_column()
+        ensure_finance_columns()
         seed_roles()
         seed_users()
         seed_attendance_types()

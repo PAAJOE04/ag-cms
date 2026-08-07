@@ -15,6 +15,7 @@ class TransactionCategory(db.Model):
     description = db.Column(db.String(255))
     is_active = db.Column(db.Boolean, default=True)
     requires_receipt = db.Column(db.Boolean, default=False)
+    requires_name = db.Column(db.Boolean, default=False)
 
     transactions = db.relationship('Transaction', back_populates='category', lazy='dynamic')
 
@@ -44,6 +45,7 @@ class Transaction(db.Model):
     )
     amount = db.Column(db.Numeric(12, 2), nullable=False)
     description = db.Column(db.String(255))
+    payer_name = db.Column(db.String(120))
     member_id = db.Column(db.Integer, db.ForeignKey('members.id'))
     payment_method = db.Column(db.String(30))  # cash, check, transfer, mobile
     transaction_date = db.Column(db.Date, nullable=False, index=True)

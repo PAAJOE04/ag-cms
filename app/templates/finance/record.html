@@ -49,7 +49,7 @@
                                 {% for cat in categories if cat.type == 'income' %}
                                 <div class="col-md-4">
                                     <label class="cat-option">
-                                        <input type="radio" name="category_id" value="{{ cat.id }}" data-receipt="{{ '1' if cat.requires_receipt else '0' }}" onchange="onCategory(this)">
+                                        <input type="radio" name="category_id" value="{{ cat.id }}" data-name="{{ '1' if cat.requires_name else '0' }}" data-receipt="{{ '1' if cat.requires_receipt else '0' }}" onchange="onCategory(this)">
                                         <span>{{ cat.name }}</span>
                                         {% if cat.requires_receipt %}<span class="badge bg-warning text-dark">Receipt</span>{% endif %}
                                     </label>
@@ -63,7 +63,7 @@
                                 {% for cat in categories if cat.type == 'expense' %}
                                 <div class="col-md-4">
                                     <label class="cat-option">
-                                        <input type="radio" name="category_id" value="{{ cat.id }}" data-receipt="{{ '1' if cat.requires_receipt else '0' }}" onchange="onCategory(this)">
+                                        <input type="radio" name="category_id" value="{{ cat.id }}" data-name="{{ '1' if cat.requires_name else '0' }}" data-receipt="{{ '1' if cat.requires_receipt else '0' }}" onchange="onCategory(this)">
                                         <span>{{ cat.name }}</span>
                                         {% if cat.requires_receipt %}<span class="badge bg-warning text-dark">Receipt</span>{% endif %}
                                     </label>
@@ -105,18 +105,22 @@
                         </div>
                     </div>
 
-                    <div id="receiptSection" class="mb-4 d-none">
-                        <label class="form-label fw-semibold">4. Receipt</label>
+                    <div id="nameSection" class="mb-4 d-none">
+                        <label class="form-label fw-semibold">4. Name of Giver</label>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Name <span class="text-muted">(Donor / Vendor / Project)</span></label>
-                                <input type="text" name="issued_to" class="form-control" placeholder="Name to appear on the receipt">
+                                <label class="form-label">Name * <span class="text-muted">(the person giving)</span></label>
+                                <input type="text" name="payer_name" id="payerName" class="form-control" placeholder="Full name of the giver">
                             </div>
-                            <div class="col-md-6 d-flex align-items-end">
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" name="generate_receipt" id="genReceipt" value="1" checked>
-                                    <label class="form-check-label" for="genReceipt"><i class="fas fa-file-invoice me-1"></i>Issue receipt</label>
-                                </div>
+                        </div>
+                    </div>
+
+                    <div id="receiptSection" class="mb-4 d-none">
+                        <label class="form-label fw-semibold">5. Receipt</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="generate_receipt" id="genReceipt" value="1" checked>
+                                <label class="form-check-label" for="genReceipt"><i class="fas fa-file-invoice me-1"></i>Issue receipt</label>
                             </div>
                         </div>
                         <div class="alert alert-light border small mt-2 mb-0"><i class="fas fa-info-circle me-1 text-info"></i>A receipt will be generated and shown for preview before you print it.</div>
@@ -194,24 +198,22 @@
     }
 </style>
 <script>
+let currentSection = 'income';
 function setSection(type) {
+    currentSection = type;
     document.getElementById('categoryGroupIncome').classList.toggle('d-none', type !== 'income');
     document.getElementById('categoryGroupExpense').classList.toggle('d-none', type !== 'expense');
     document.querySelectorAll('input[name="category_id"]').forEach(r => { r.checked = false; });
-    hideReceipt();
+    document.getElementById('nameSection').classList.add('d-none');
+    document.getElementById('receiptSection').classList.add('d-none');
 }
 function onCategory(el) {
-    if (el.dataset.receipt === '1') {
-        showReceipt();
-    } else {
-        hideReceipt();
-    }
-}
-function showReceipt() {
-    document.getElementById('receiptSection').classList.remove('d-none');
-}
-function hideReceipt() {
-    document.getElementById('receiptSection').classList.add('d-none');
+    const needsName = el.dataset.name === '1';
+    const needsReceipt = el.dataset.receipt === '1';
+    document.getElementById('nameSection').classList.toggle('d-none', !needsName);
+    document.getElementById('receiptSection').classList.toggle('d-none', !needsReceipt);
+    const nameInput = document.getElementById('payerName');
+    nameInput.required = needsName && currentSection === 'income';
 }
 </script>
 {% endblock %}
