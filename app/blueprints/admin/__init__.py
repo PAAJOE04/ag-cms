@@ -38,9 +38,18 @@ def index():
 @permission_required('users:view')
 def users():
     """Manage users."""
-    users_list = paginate_query(User.query.order_by(User.created_at.desc()))
+    role_filter = request.args.get('role', '').strip()
+    query = User.query
+    if role_filter:
+        query = query.join(Role).filter(Role.name == role_filter)
+    users_list = paginate_query(query.order_by(User.created_at.desc()))
     roles = Role.query.all()
-    return render_template('admin/users.html', users=users_list, roles=roles)
+    return render_template(
+        'admin/users.html',
+        users=users_list,
+        roles=roles,
+        role_filter=role_filter,
+    )
 
 
 @admin_bp.route('/users/create', methods=['GET', 'POST'])
@@ -53,30 +62,72 @@ def create_user():
         roles = Role.query.all()
 
     if request.method == 'POST':
-        role_id = request.form.get('role_id', type=int)
-        role = Role.query.get(role_id)
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
 
-        if role.name == Role.DEVELOPER and not current_user.is_developer():
-            flash('Cannot assign Developer role.', 'danger')
-            return redirect(url_for('admin.create_user'))
+        if not username or not email or not request.form.get('first_name') or not request.form.get('last_name'):
+            flash('All required fields must be filled in.', 'danger')
+        elif User.query.filter_by(username=username).first():
+            flash('That username is already taken.', 'danger')
+        elif User.query.filter_by(email=email).first():
+            flash('That email is already registered.', 'danger')
+        elif len(password) < 8:
+            flash('Password must be at least 8 characters.', 'danger')
+        elif password != confirm_password:
+            flash('Passwords do not match.', 'danger')
+        else:
+            role_id = request.form.get('role_id', type=int)
+            role = Role.query.get(role_id) if role_id else None
 
-        user = User(
-            username=request.form['username'],
-            email=request.form['email'],
-            first_name=request.form['first_name'],
-            last_name=request.form['last_name'],
-            phone=request.form.get('phone'),
-            role_id=role_id,
-            created_by_id=current_user.id,
-        )
-        user.set_password(request.form['password'])
-        db.session.add(user)
-        audit_action('create', 'admin', f'Created user {user.username}')
-        db.session.commit()
-        flash(f'User {user.username} created.', 'success')
-        return redirect(url_for('admin.users'))
+            if not role:
+                flash('Please select a role.', 'danger')
+                return redirect(url_for('admin.create_user'))
+
+            if role.name == Role.DEVELOPER and not current_user.is_developer():
+                flash('Cannot assign Developer role.', 'danger')
+                return redirect(url_for('admin.create_user'))
+
+            user = User(
+                username=username,
+                email=email,
+                first_name=request.form['first_name'],
+                last_name=request.form['last_name'],
+                phone=request.form.get('phone'),
+                role_id=role_id,
+                created_by_id=current_user.id,
+            )
+            user.set_password(password)
+            db.session.add(user)
+            audit_action('create', 'admin', f'Created user {user.username}')
+            db.session.commit()
+            flash(f'User {user.username} created.', 'success')
+            return redirect(url_for('admin.users'))
 
     return render_template('admin/create_user.html', roles=roles)
+
+
+@admin_bp.route('/users/<int:id>/reset-password', methods=['POST'])
+@login_required
+@permission_required('users:edit')
+def reset_password(id):
+    """Reset a user's password."""
+    user = User.query.get_or_404(id)
+    if not current_user.can_manage_user(user):
+        flash('Cannot modify this user.', 'danger')
+        return redirect(url_for('admin.users'))
+
+    new_password = request.form.get('password', '')
+    if len(new_password) < 8:
+        flash('Password must be at least 8 characters.', 'danger')
+        return redirect(url_for('admin.users'))
+
+    user.set_password(new_password)
+    audit_action('reset_password', 'admin', f'Reset password for user {user.username}')
+    db.session.commit()
+    flash(f'Password reset for {user.username}.', 'success')
+    return redirect(url_for('admin.users'))
 
 
 @admin_bp.route('/users/<int:id>/toggle', methods=['POST'])

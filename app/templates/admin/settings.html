@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block page_title %}System Settings{% endblock %}
+
+{% block content %}
+<div class="alert alert-info small" role="alert">
+    <i class="fas fa-info-circle me-1"></i>
+    Settings are managed in the <code>.env</code> file / environment variables. Shown below for reference.
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-church me-2"></i>Church Details</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="text-muted small">Church Name</div>
+                    <div class="fw-semibold">{{ config.CHURCH_NAME }}</div>
+                </div>
+                <div class="mb-3">
+                    <div class="text-muted small">Address</div>
+                    <div class="fw-semibold">{{ config.CHURCH_ADDRESS or '—' }}</div>
+                </div>
+                <div class="mb-3">
+                    <div class="text-muted small">Phone</div>
+                    <div class="fw-semibold">{{ config.CHURCH_PHONE or '—' }}</div>
+                </div>
+                <div class="mb-3">
+                    <div class="text-muted small">Email</div>
+                    <div class="fw-semibold">{{ config.CHURCH_EMAIL or '—' }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-shield-alt me-2"></i>Security</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="text-muted small">Session Timeout</div>
+                    <div class="fw-semibold">{{ config.PERMANENT_SESSION_LIFETIME.total_seconds() // 60 }} minutes</div>
+                </div>
+                <div class="mb-3">
+                    <div class="text-muted small">Max Login Attempts</div>
+                    <div class="fw-semibold">{{ config.MAX_LOGIN_ATTEMPTS }}</div>
+                </div>
+                <div class="mb-3">
+                    <div class="text-muted small">Lockout Duration</div>
+                    <div class="fw-semibold">{{ config.LOCKOUT_DURATION_MINUTES }} minutes</div>
+                </div>
+                <div class="mb-3">
+                    <div class="text-muted small">CSRF Protection</div>
+                    <div class="fw-semibold">{{ 'Enabled' if config.WTF_CSRF_ENABLED else 'Disabled' }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-database me-2"></i>Application</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="text-muted small">Database</div>
+                    <div class="fw-semibold">
+                        {% if config.SQLALCHEMY_DATABASE_URI %}
+                        {{ config.SQLALCHEMY_DATABASE_URI.split('://')[0] }} ({{ 'PostgreSQL' if config.SQLALCHEMY_DATABASE_URI.startswith('postgresql') else 'SQLite' }})
+                        {% else %}Not configured{% endif %}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="text-muted small">Debug Mode</div>
+                    <div class="fw-semibold">{{ 'On' if config.DEBUG else 'Off' }}</div>
+                </div>
+                <div class="mb-3">
+                    <div class="text-muted small">Items Per Page</div>
+                    <div class="fw-semibold">{{ config.ITEMS_PER_PAGE }}</div>
+                </div>
+                <div class="mb-3">
+                    <div class="text-muted small">Upload Size Limit</div>
+                    <div class="fw-semibold">{{ config.MAX_CONTENT_LENGTH // (1024 * 1024) }} MB</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-robot me-2"></i>AI Assistant</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="text-muted small">OpenAI API Key</div>
+                    <div class="fw-semibold">
+                        {% if config.OPENAI_API_KEY %}
+                        <span class="text-success"><i class="fas fa-check-circle me-1"></i>Configured</span>
+                        {% else %}
+                        <span class="text-muted">Not configured</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Follow-Ups{% endblock %}
+{% block page_title %}Follow-Up Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <p class="text-muted mb-0">Pending follow-ups for absent members and visitors.</p>
+    <form method="POST" action="{{ url_for('admin.detect_followups') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-sync me-1"></i> Detect Follow-Ups</button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Person</th>
+                    <th>Type</th>
+                    <th>Reason</th>
+                    <th>Priority</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fu in followups.items %}
+                <tr>
+                    <td>
+                        {% if fu.member %}
+                        <a href="{{ url_for('members.view', id=fu.member.id) }}">{{ fu.member.full_name }}</a>
+                        {% elif fu.visitor %}
+                        {{ fu.visitor.first_name }} {{ fu.visitor.last_name }} <span class="badge bg-secondary ms-1">Visitor</span>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td><span class="badge bg-info">{{ fu.type|replace('_', ' ')|title }}</span></td>
+                    <td class="text-muted">{{ fu.reason or '' }}</td>
+                    <td>
+                        <span class="badge bg-{{ 'danger' if fu.priority == 'high' else 'warning' if fu.priority == 'normal' else 'secondary' }}">{{ fu.priority|title }}</span>
+                    </td>
+                    <td>{{ fu.due_date.strftime('%b %d, %Y') if fu.due_date else '—' }}</td>
+                    <td><span class="badge bg-{{ 'warning' if fu.status == 'pending' else 'success' }}">{{ fu.status|title }}</span></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No pending follow-ups.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if followups.pages > 1 %}
+<nav class="mt-3"><ul class="pagination justify-content-center">
+    {% for p in followups.iter_pages() %}
+    {% if p %}<li class="page-item {% if p == followups.page %}active{% endif %}"><a class="page-link" href="?page={{ p }}">{{ p }}</a></li>
+    {% else %}<li class="page-item disabled"><span class="page-link">...</span></li>{% endif %}
+    {% endfor %}
+</ul></nav>
+{% endif %}
+{% endblock %}

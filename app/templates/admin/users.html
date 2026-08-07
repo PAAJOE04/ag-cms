@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+{% block page_title %}User Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <form class="d-flex gap-2" method="GET">
+        <select name="role" class="form-select" style="width:auto;" onchange="this.form.submit()">
+            <option value="">All Roles</option>
+            {% for role in roles %}
+            <option value="{{ role.name }}" {% if role_filter == role.name %}selected{% endif %}>{{ role.name|replace('_', ' ')|title }}</option>
+            {% endfor %}
+        </select>
+    </form>
+    {% if current_user.has_permission('users:create') %}
+    <a href="{{ url_for('admin.create_user') }}" class="btn btn-primary">
+        <i class="fas fa-user-plus me-1"></i> Create User
+    </a>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Last Login</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users.items %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="member-avatar">{{ user.first_name[0] }}{{ user.last_name[0] }}</div>
+                            <div>
+                                <strong>{{ user.full_name }}</strong><br>
+                                <small class="text-muted">@{{ user.username }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ user.email }}</td>
+                    <td><span class="badge bg-primary">{{ user.role.name|replace('_', ' ')|title }}</span></td>
+                    <td>
+                        {% if user.is_locked %}
+                        <span class="badge bg-danger">Locked</span>
+                        {% elif user.is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ user.last_login.strftime('%b %d, %Y') if user.last_login else '—' }}</td>
+                    <td class="text-end">
+                        {% if current_user.can_manage_user(user) %}
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#resetModal" data-id="{{ user.id }}" data-name="{{ user.username }}">
+                            <i class="fas fa-key me-1"></i>Reset
+                        </button>
+                        <form method="POST" action="{{ url_for('admin.toggle_user', id=user.id) }}" class="d-inline" onsubmit="return confirm('{{ 'Deactivate' if user.is_active else 'Activate' }} {{ user.username }}?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-outline-{{ 'danger' if user.is_active else 'success' }}">
+                                <i class="fas fa-{{ 'ban' if user.is_active else 'check' }} me-1"></i>{{ 'Deactivate' if user.is_active else 'Activate' }}
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No users found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if users.pages > 1 %}
+<nav class="mt-3"><ul class="pagination justify-content-center">
+    {% for p in users.iter_pages() %}
+    {% if p %}<li class="page-item {% if p == users.page %}active{% endif %}"><a class="page-link" href="?page={{ p }}&role={{ role_filter }}">{{ p }}</a></li>
+    {% else %}<li class="page-item disabled"><span class="page-link">...</span></li>{% endif %}
+    {% endfor %}
+</ul></nav>
+{% endif %}
+
+<div class="modal fade" id="resetModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form class="modal-content" method="POST" id="resetForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-key me-2"></i>Reset Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small">Set a new password for <strong id="resetUsername"></strong>.</p>
+                <label class="form-label">New Password *</label>
+                <input type="password" name="password" class="form-control" required minlength="8" autocomplete="new-password">
+                <div class="form-text">Minimum 8 characters. Give the new password to the user securely.</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Reset Password</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('resetModal').addEventListener('show.bs.modal', function (event) {
+    const btn = event.relatedTarget;
+    document.getElementById('resetUsername').textContent = btn.dataset.name;
+    document.getElementById('resetForm').action = '/admin/users/' + btn.dataset.id + '/reset-password';
+});
+</script>
+{% endblock %}

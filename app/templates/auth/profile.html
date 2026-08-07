@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body text-center py-4">
+                <div class="member-avatar lg mx-auto mb-3">{{ current_user.first_name[0] }}{{ current_user.last_name[0] }}</div>
+                <h5>{{ current_user.full_name }}</h5>
+                <p class="text-muted mb-2">{{ current_user.role.name|replace('_', ' ')|title }}</p>
+                <span class="badge bg-{{ 'success' if current_user.is_active else 'secondary' }}">{{ 'Active' if current_user.is_active else 'Inactive' }}</span>
+                <div class="mt-3">
+                    <a href="{{ url_for('auth.change_password') }}" class="btn btn-primary btn-sm"><i class="fas fa-key me-1"></i> Change Password</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card mb-3">
+            <div class="card-header"><i class="fas fa-id-card me-2"></i>Account Details</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="text-muted small">Username</div>
+                        <div class="fw-semibold">{{ current_user.username }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Email</div>
+                        <div class="fw-semibold">{{ current_user.email }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Phone</div>
+                        <div class="fw-semibold">{{ current_user.phone or '—' }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Member Account</div>
+                        <div class="fw-semibold">
+                            {% if current_user.member %}
+                            <a href="{{ url_for('members.view', id=current_user.member.id) }}">{{ current_user.member.full_name }}</a>
+                            {% else %}Not linked{% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Account Created</div>
+                        <div class="fw-semibold">{{ current_user.created_at.strftime('%b %d, %Y') if current_user.created_at else '—' }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Last Login</div>
+                        <div class="fw-semibold">{{ current_user.last_login.strftime('%b %d, %Y %H:%M') if current_user.last_login else 'Never' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="fas fa-history me-2"></i>Recent Login Activity</div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date &amp; Time</th>
+                            <th>IP Address</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in login_history %}
+                        <tr>
+                            <td>{{ entry.attempted_at.strftime('%b %d, %Y %H:%M') }}</td>
+                            <td><code>{{ entry.ip_address or '—' }}</code></td>
+                            <td><span class="badge bg-{{ 'success' if entry.success else 'danger' }}">{{ 'Success' if entry.success else 'Failed' }}</span></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center text-muted py-4">No login history yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
