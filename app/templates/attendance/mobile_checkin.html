@@ -36,13 +36,43 @@
                     {% if not checked_in %}
                     <form method="POST" autocomplete="off">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <div class="mb-3">
-                            <label class="form-label">Membership ID or Phone Number</label>
-                            <input type="text" name="identifier" class="form-control form-control-lg"
-                                   placeholder="e.g. M-2026-0001 or 024xxxxxxx"
-                                   value="{{ request.form.get('identifier', '') }}" required autofocus>
-                            <div class="form-text">Check your membership card or use the number you registered with.</div>
+                        <input type="hidden" name="mode" id="mode" value="{{ mode or 'member' }}">
+                        <div class="btn-group w-100 mb-3" role="group" aria-label="Check-in type">
+                            <button type="button" class="btn btn-outline-primary" id="btn-member" onclick="switchMode('member')">I'm a member</button>
+                            <button type="button" class="btn btn-outline-primary" id="btn-visitor" onclick="switchMode('visitor')">First time here</button>
                         </div>
+
+                        <div id="member-fields">
+                            <div class="mb-3">
+                                <label class="form-label">Membership ID or Phone Number</label>
+                                <input type="text" name="identifier" class="form-control form-control-lg"
+                                       placeholder="e.g. M-2026-0001 or 024xxxxxxx"
+                                       value="{{ request.form.get('identifier', '') }}" autofocus>
+                                <div class="form-text">Check your membership card or use the number you registered with.</div>
+                            </div>
+                        </div>
+
+                        <div id="visitor-fields" style="display:none">
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label">First Name</label>
+                                    <input type="text" name="first_name" class="form-control form-control-lg"
+                                           placeholder="e.g. Kwame" value="{{ request.form.get('first_name', '') }}">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Last Name</label>
+                                    <input type="text" name="last_name" class="form-control form-control-lg"
+                                           placeholder="e.g. Mensah" value="{{ request.form.get('last_name', '') }}">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" name="phone" class="form-control form-control-lg"
+                                       placeholder="e.g. 024xxxxxxx" value="{{ request.form.get('phone', '') }}">
+                                <div class="form-text">So we can follow up after the service.</div>
+                            </div>
+                        </div>
+
                         <div class="mb-4">
                             <label class="form-label">Service / Meeting</label>
                             <select name="attendance_type_id" class="form-select form-select-lg" required>
@@ -52,7 +82,7 @@
                             </select>
                         </div>
                         <button type="submit" class="btn btn-primary btn-lg w-100">
-                            <i class="fas fa-check me-1"></i> Check Me In
+                            <i class="fas fa-check me-1"></i> <span id="submit-label">Check Me In</span>
                         </button>
                     </form>
                     {% else %}
@@ -65,5 +95,19 @@
             <p class="text-center text-white-50 small mt-3 mb-0">Having trouble? See an usher for help.</p>
         </div>
     </div>
+    <script>
+        function switchMode(mode) {
+            var isMember = mode === 'member';
+            document.getElementById('mode').value = mode;
+            document.getElementById('member-fields').style.display = isMember ? '' : 'none';
+            document.getElementById('visitor-fields').style.display = isMember ? 'none' : '';
+            document.getElementById('btn-member').classList.toggle('btn-outline-primary', !isMember);
+            document.getElementById('btn-member').classList.toggle('btn-primary', isMember);
+            document.getElementById('btn-visitor').classList.toggle('btn-outline-primary', isMember);
+            document.getElementById('btn-visitor').classList.toggle('btn-primary', !isMember);
+            document.getElementById('submit-label').textContent = isMember ? 'Check Me In' : 'Check In as Visitor';
+        }
+        switchMode('{{ mode or 'member' }}');
+    </script>
 </body>
 </html>

@@ -8,7 +8,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import func
 
 from app.extensions import db
-from app.models.member import Member
+from app.models.member import Member, Visitor
 from app.models.attendance import Attendance, AttendanceType
 from app.services.qr_service import QRService
 from app.utils.decorators import permission_required
@@ -109,32 +109,51 @@ def mobile():
     message = None
     message_class = None
     checked_in = False
+    mode = request.form.get('mode', 'member') if request.method == 'POST' else 'member'
 
     if request.method == 'POST':
-        identifier = (request.form.get('identifier') or '').strip()
         type_id = request.form.get('attendance_type_id', type=int)
         attendance_type = AttendanceType.query.get(type_id) if type_id else None
+        today = datetime.utcnow().date()
 
-        if not identifier:
-            message = 'Please enter your membership ID or phone number.'
-            message_class = 'danger'
-        elif not attendance_type:
+        if not attendance_type:
             message = 'Please choose a service type.'
             message_class = 'danger'
-        else:
-            member = Member.query.filter(
-                Member.membership_status == 'active',
-                Member.is_visitor == False,  # noqa: E712
-                db.or_(
-                    Member.membership_id.ilike(f'%{identifier}%'),
-                    Member.phone == identifier,
-                )
-            ).first()
-            if not member:
-                message = "We couldn't find your record. Check the ID on your card or see an usher for help."
+        elif mode == 'visitor':
+            first_name = (request.form.get('first_name') or '').strip()
+            last_name = (request.form.get('last_name') or '').strip()
+            phone = (request.form.get('phone') or '').strip()
+
+            if not first_name or not last_name:
+                message = "Please enter the visitor's first and last name."
+                message_class = 'danger'
+            elif not phone:
+                message = 'Please enter a phone number so we can follow up.'
                 message_class = 'danger'
             else:
-                today = datetime.utcnow().date()
+                new_visitor = False
+                member = Member.query.filter(Member.phone == phone).first()
+                if not member:
+                    member = Member(
+                        membership_id=Member.generate_membership_id(),
+                        first_name=first_name,
+                        last_name=last_name,
+                        phone=phone,
+                        email=(request.form.get('email') or '').strip() or None,
+                        membership_status='active',
+                        is_visitor=True,
+                        membership_date=today,
+                    )
+                    db.session.add(member)
+                    db.session.flush()
+                    db.session.add(Visitor(
+                        first_name=first_name,
+                        last_name=last_name,
+                        phone=phone,
+                        visit_date=today,
+                    ))
+                    new_visitor = True
+
                 existing = Attendance.query.filter_by(
                     member_id=member.id,
                     attendance_type_id=attendance_type.id,
@@ -156,12 +175,65 @@ def mobile():
                     )
                     db.session.add(record)
                     db.session.commit()
-                    message = (
-                        f"Welcome, {member.first_name}! You're checked in to "
-                        f"{attendance_type.name}. God bless you."
-                    )
+                    if new_visitor:
+                        message = (
+                            f"Welcome, {member.first_name}! We've saved your details "
+                            f"as a first-time visitor and checked you in to "
+                            f"{attendance_type.name}. God bless you."
+                        )
+                    else:
+                        message = (
+                            f"Welcome, {member.first_name}! You're checked in to "
+                            f"{attendance_type.name}. God bless you."
+                        )
                     message_class = 'success'
                     checked_in = True
+        else:
+            identifier = (request.form.get('identifier') or '').strip()
+
+            if not identifier:
+                message = 'Please enter your membership ID or phone number.'
+                message_class = 'danger'
+            else:
+                member = Member.query.filter(
+                    Member.membership_status == 'active',
+                    Member.is_visitor == False,  # noqa: E712
+                    db.or_(
+                        Member.membership_id.ilike(f'%{identifier}%'),
+                        Member.phone == identifier,
+                    )
+                ).first()
+                if not member:
+                    message = "We couldn't find your record. Check the ID on your card or see an usher for help."
+                    message_class = 'danger'
+                else:
+                    existing = Attendance.query.filter_by(
+                        member_id=member.id,
+                        attendance_type_id=attendance_type.id,
+                        date=today,
+                    ).first()
+                    if existing:
+                        message = (
+                            f"You're already checked in to {attendance_type.name} "
+                            f"today, {member.first_name}. Have a blessed service!"
+                        )
+                        message_class = 'warning'
+                    else:
+                        record = Attendance(
+                            member_id=member.id,
+                            attendance_type_id=attendance_type.id,
+                            date=today,
+                            check_in_method='qr',
+                            recorded_by_id=None,
+                        )
+                        db.session.add(record)
+                        db.session.commit()
+                        message = (
+                            f"Welcome, {member.first_name}! You're checked in to "
+                            f"{attendance_type.name}. God bless you."
+                        )
+                        message_class = 'success'
+                        checked_in = True
 
     return render_template(
         'attendance/mobile_checkin.html',
@@ -169,6 +241,7 @@ def mobile():
         message=message,
         message_class=message_class,
         checked_in=checked_in,
+        mode=mode,
     )
 
 
