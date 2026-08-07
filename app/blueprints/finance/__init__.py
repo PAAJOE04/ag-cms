@@ -116,7 +116,12 @@ def record():
         return redirect(url_for('finance.transactions'))
 
     members = Member.query.filter_by(membership_status='active').order_by(Member.last_name).all()
-    return render_template('finance/record.html', categories=categories, members=members)
+    return render_template(
+        'finance/record.html',
+        categories=categories,
+        members=members,
+        today=datetime.utcnow().date(),
+    )
 
 
 @finance_bp.route('/budgets')

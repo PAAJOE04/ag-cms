@@ -36,6 +36,9 @@ class Config:
     CHURCH_PHONE = os.getenv('CHURCH_PHONE', '')
     CHURCH_EMAIL = os.getenv('CHURCH_EMAIL', '')
 
+    CURRENCY_SYMBOL = os.getenv('CURRENCY_SYMBOL', 'GH₵')
+    CURRENCY_CODE = os.getenv('CURRENCY_CODE', 'GHS')
+
     OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
 
     ITEMS_PER_PAGE = 20

@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Record Transaction{% endblock %}
+{% block page_title %}Record Transaction{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-plus-circle me-2"></i>New Transaction</div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label">Type *</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="type" id="typeIncome" value="income" checked onchange="filterCategories()">
+                                <label class="form-check-label text-success" for="typeIncome"><i class="fas fa-arrow-down me-1"></i>Income</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="type" id="typeExpense" value="expense" onchange="filterCategories()">
+                                <label class="form-check-label text-danger" for="typeExpense"><i class="fas fa-arrow-up me-1"></i>Expense</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Category *</label>
+                            <select name="category_id" id="categorySelect" class="form-select" required>
+                                <option value="">Select category...</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}" data-type="{{ cat.type }}">{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Amount *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">{{ currency_symbol }}</span>
+                                <input type="number" name="amount" class="form-control" step="0.01" min="0.01" placeholder="0.00" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Date *</label>
+                            <input type="date" name="transaction_date" class="form-control" value="{{ today }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Payment Method</label>
+                            <select name="payment_method" class="form-select">
+                                <option value="">Select...</option>
+                                <option value="cash">Cash</option>
+                                <option value="mobile">Mobile Money</option>
+                                <option value="transfer">Bank Transfer</option>
+                                <option value="check">Cheque</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Member</label>
+                            <select name="member_id" class="form-select">
+                                <option value="">None</option>
+                                {% for member in members %}
+                                <option value="{{ member.id }}">{{ member.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="col-12" id="receiptSection">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="generate_receipt" id="genReceipt" value="1">
+                                <label class="form-check-label" for="genReceipt">Generate receipt</label>
+                            </div>
+                            <div id="issuedToField" class="d-none">
+                                <label class="form-label">Issued To</label>
+                                <input type="text" name="issued_to" class="form-control" placeholder="Name of giver">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Transaction</button>
+                        <a href="{{ url_for('finance.transactions') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterCategories() {
+    const type = document.querySelector('input[name="type"]:checked').value;
+    document.querySelectorAll('#categorySelect option[data-type]').forEach(opt => {
+        opt.disabled = opt.dataset.type !== type;
+    });
+    const sel = document.getElementById('categorySelect');
+    if (sel.value) {
+        const chosen = sel.options[sel.selectedIndex];
+        if (chosen.dataset.type && chosen.dataset.type !== type) sel.value = '';
+    }
+}
+document.getElementById('genReceipt').addEventListener('change', function () {
+    document.getElementById('issuedToField').classList.toggle('d-none', !this.checked);
+});
+filterCategories();
+</script>
+{% endblock %}

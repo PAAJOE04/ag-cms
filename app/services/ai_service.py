@@ -129,9 +129,9 @@ class AIService:
             net = context['monthly_income'] - context['monthly_expenses']
             return (
                 f"This month's financial summary:\n"
-                f"- Income: ${context['monthly_income']:,.2f}\n"
-                f"- Expenses: ${context['monthly_expenses']:,.2f}\n"
-                f"- Net: ${net:,.2f}"
+                f"- Income: GH₵{context['monthly_income']:,.2f}\n"
+                f"- Expenses: GH₵{context['monthly_expenses']:,.2f}\n"
+                f"- Net: GH₵{net:,.2f}"
             )
 
         if 'missed' in question and ('consecutive' in question or 'absent' in question):

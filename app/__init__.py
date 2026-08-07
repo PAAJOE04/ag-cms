@@ -82,6 +82,7 @@ def _register_context_processors(app):
         return {
             'church_name': app.config.get('CHURCH_NAME', 'AG CMS'),
             'current_year': datetime.utcnow().year,
+            'currency_symbol': app.config.get('CURRENCY_SYMBOL', 'GH₵'),
         }
 
 

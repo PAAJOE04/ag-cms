@@ -62,9 +62,10 @@ def paginate_query(query, page=None, per_page=None):
 
 def format_currency(amount):
     """Format amount as currency string."""
+    symbol = current_app.config.get('CURRENCY_SYMBOL', 'GH₵')
     if amount is None:
-        return '$0.00'
-    return f'${float(amount):,.2f}'
+        return f'{symbol}0.00'
+    return f'{symbol}{float(amount):,.2f}'
 
 
 def get_date_range(period):

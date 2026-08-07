@@ -4,9 +4,9 @@
 
 {% block content %}
 <div class="row g-3 mb-4">
-    <div class="col-md-4"><div class="stat-card"><div class="stat-label">Monthly Income</div><div class="stat-value text-success">${{ "{:,.2f}".format(income) }}</div></div></div>
-    <div class="col-md-4"><div class="stat-card"><div class="stat-label">Monthly Expenses</div><div class="stat-value text-danger">${{ "{:,.2f}".format(expenses) }}</div></div></div>
-    <div class="col-md-4"><div class="stat-card"><div class="stat-label">Net Balance</div><div class="stat-value">${{ "{:,.2f}".format(net) }}</div></div></div>
+    <div class="col-md-4"><div class="stat-card"><div class="stat-label">Monthly Income</div><div class="stat-value text-success">{{ currency_symbol }}{{ "{:,.2f}".format(income) }}</div></div></div>
+    <div class="col-md-4"><div class="stat-card"><div class="stat-label">Monthly Expenses</div><div class="stat-value text-danger">{{ currency_symbol }}{{ "{:,.2f}".format(expenses) }}</div></div></div>
+    <div class="col-md-4"><div class="stat-card"><div class="stat-label">Net Balance</div><div class="stat-value">{{ currency_symbol }}{{ "{:,.2f}".format(net) }}</div></div></div>
 </div>
 
 <div class="d-flex gap-2 mb-3">
