@@ -11,7 +11,15 @@
                     <span class="badge bg-primary">{{ event.event_type }}</span>
                     <span class="badge bg-{{ 'success' if event.status == 'upcoming' else 'secondary' }}">{{ event.status|title }}</span>
                 </div>
-                <h4>{{ event.title }}</h4>
+                <div class="d-flex justify-content-between align-items-start">
+                    <h4>{{ event.title }}</h4>
+                    {% if current_user.has_permission('events:create') %}
+                    <form method="POST" action="{{ url_for('events.delete', id=event.id) }}" onsubmit="return confirm('Delete this event? This cannot be undone.');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash me-1"></i> Delete</button>
+                    </form>
+                    {% endif %}
+                </div>
                 {% if event.description %}<p class="text-muted">{{ event.description }}</p>{% endif %}
                 <hr>
                 <div class="small">

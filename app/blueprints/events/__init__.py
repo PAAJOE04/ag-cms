@@ -85,6 +85,20 @@ def view(id):
     )
 
 
+@events_bp.route('/<int:id>/delete', methods=['POST'])
+@login_required
+@permission_required('events:create')
+def delete(id):
+    """Delete an event."""
+    event = Event.query.get_or_404(id)
+    title = event.title
+    db.session.delete(event)
+    audit_action('delete', 'events', f'Deleted event: {title}')
+    db.session.commit()
+    flash(f'Event "{title}" deleted.', 'success')
+    return redirect(url_for('events.index'))
+
+
 @events_bp.route('/<int:id>/register', methods=['POST'])
 @login_required
 @permission_required('events:create')
