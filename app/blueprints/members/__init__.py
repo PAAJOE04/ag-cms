@@ -14,7 +14,6 @@ from app.models.finance import Transaction
 from app.models.follow_up import FollowUp
 from app.models.member import Member, Family, EmergencyContact, Visitor
 from app.models.user import User
-from app.services.qr_service import QRService
 from app.utils.decorators import permission_required
 from app.utils.helpers import audit_action, paginate_query, save_upload
 
@@ -106,7 +105,6 @@ def create():
             db.session.flush()
 
             try:
-                QRService.generate_member_qr(member)
                 audit_action('create', 'members', f'Created member {member.membership_id}',
                              resource_type='member', resource_id=member.id)
                 db.session.commit()

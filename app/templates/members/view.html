@@ -20,13 +20,6 @@
                     </form>
                 </div>
                 {% endif %}
-                <hr>
-                <div class="check-in-qr">
-                    <strong class="d-block mb-2">Check-In QR Code</strong>
-                    <img src="{{ url_for('attendance.qr_image', member_id=member.id) }}" alt="Check-in QR code" class="img-fluid mb-2" style="max-width: 180px;">
-                    <small class="text-muted d-block">Member shows this QR at the door to check in with the scanner.</small>
-                    <a href="{{ url_for('attendance.qr_image', member_id=member.id) }}" download="qr_{{ member.membership_id }}.png" class="btn btn-sm btn-outline-secondary mt-2"><i class="fas fa-download me-1"></i> Download QR</a>
-                </div>
             </div>
         </div>
     </div>

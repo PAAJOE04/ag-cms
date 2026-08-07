@@ -17,8 +17,8 @@
 <div class="d-flex gap-2 mb-3 flex-wrap">
     {% if current_user.has_permission('attendance:create') %}
     <a href="{{ url_for('attendance.checkin') }}" class="btn btn-primary"><i class="fas fa-plus me-1"></i> Check-In</a>
-    <a href="{{ url_for('attendance.scanner') }}" class="btn btn-success"><i class="fas fa-qrcode me-1"></i> QR Scanner</a>
     {% endif %}
+    <a href="{{ url_for('attendance.poster') }}" class="btn btn-success"><i class="fas fa-qrcode me-1"></i> Check-In QR Poster</a>
     <a href="{{ url_for('attendance.reports') }}" class="btn btn-outline-primary"><i class="fas fa-chart-bar me-1"></i> Reports</a>
 </div>
 
